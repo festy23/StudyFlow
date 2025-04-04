@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package homework.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ==== SERVICE ====
+
+service HomeworkService {
+  // --- ASSIGNMENT ---
+  rpc CreateAssignment(CreateAssignmentRequest) returns (Assignment);
+  rpc UpdateAssignment(UpdateAssignmentRequest) returns (Assignment);
+  rpc DeleteAssignment(DeleteAssignmentRequest) returns (Empty);
+
+  rpc ListAssignmentsByTutor(ListAssignmentsByTutorRequest) returns (ListAssignmentsResponse);
+  rpc ListAssignmentsByStudent(ListAssignmentsByStudentRequest) returns (ListAssignmentsResponse);
+  rpc ListAssignmentsByPair(ListAssignmentsByPairRequest) returns (ListAssignmentsResponse);
+
+  // --- SUBMISSION ---
+  rpc CreateSubmission(CreateSubmissionRequest) returns (Submission);
+  rpc ListSubmissionsByAssignment(ListSubmissionsByAssignmentRequest) returns (ListSubmissionsResponse);
+
+  // --- FEEDBACK ---
+  rpc CreateFeedback(CreateFeedbackRequest) returns (Feedback);
+  rpc UpdateFeedback(UpdateFeedbackRequest) returns (Feedback);
+  rpc ListFeedbacksByAssignment(ListFeedbacksByAssignmentRequest) returns (ListFeedbacksResponse);
+}
+
+// ==== ENUM ====
+
+enum AssignmentStatusFilter {
+  ASSIGNMENT_STATUS_UNSPECIFIED = 0;
+  UNSENT = 1;
+  UNREVIEWED = 2;
+  REVIEWED = 3;
+  OVERDUE = 4;
+}
+
+// ==== REQUEST/RESPONSE ====
+
+message Empty {}
+
+message DeleteAssignmentRequest {
+  string assignment_id = 1;
+}
+
+message CreateAssignmentRequest {
+  string tutor_id = 1;
+  string student_id = 2;
+  string title = 3;
+  string description = 4;
+  string file_id = 5;
+  google.protobuf.Timestamp due_date = 6;
+}
+
+message UpdateAssignmentRequest {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string file_id = 4;
+  google.protobuf.Timestamp due_date = 5;
+}
+
+message ListAssignmentsByTutorRequest {
+  string tutor_id = 1;
+  repeated AssignmentStatusFilter status_filter = 2;
+}
+
+message ListAssignmentsByStudentRequest {
+  string student_id = 1;
+  repeated AssignmentStatusFilter status_filter = 2;
+}
+
+message ListAssignmentsByPairRequest {
+  string tutor_id = 1;
+  string student_id = 2;
+  repeated AssignmentStatusFilter status_filter = 3;
+}
+
+message ListAssignmentsResponse {
+  repeated Assignment assignments = 1;
+}
+
+message CreateSubmissionRequest {
+  string assignment_id = 1;
+  string file_id = 2;
+  string comment = 3;
+}
+
+message ListSubmissionsByAssignmentRequest {
+  string assignment_id = 1;
+}
+
+message ListSubmissionsResponse {
+  repeated Submission submissions = 1;
+}
+
+message CreateFeedbackRequest {
+  string submission_id = 1;
+  string file_id = 2;
+  string comment = 3;
+}
+
+message UpdateFeedbackRequest {
+  string submission_id = 1;
+  string file_id = 2;
+  string comment = 3;
+}
+
+message ListFeedbacksByAssignmentRequest {
+  string assignment_id = 1;
+}
+
+message ListFeedbacksResponse {
+  repeated Feedback feedbacks = 1;
+}
+
+// ==== OUTPUT MODELS ====
+
+message Assignment {
+  string id = 1;
+  string tutor_id = 2;
+  string student_id = 3;
+  string title = 4;
+  string description = 5;
+  string file_id = 6;
+  google.protobuf.Timestamp due_date = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp edited_at = 9;
+}
+
+message Submission {
+  string id = 1;
+  string assignment_id = 2;
+  string file_id = 3;
+  string comment = 4;
+  google.protobuf.Timestamp submitted_at = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp edited_at = 7;
+}
+
+message Feedback {
+  string id = 1;
+  string submission_id = 2;
+  string file_id = 3;
+  string comment = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp edited_at = 6;
+}
