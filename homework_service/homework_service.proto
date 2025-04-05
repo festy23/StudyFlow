@@ -24,6 +24,12 @@ service HomeworkService {
   rpc CreateFeedback(CreateFeedbackRequest) returns (Feedback);
   rpc UpdateFeedback(UpdateFeedbackRequest) returns (Feedback);
   rpc ListFeedbacksByAssignment(ListFeedbacksByAssignmentRequest) returns (ListFeedbacksResponse);
+
+  // --- FILES ---
+  rpc GetAssignmentFile(GetAssignmentFileRequest) returns (HomeworkFileURL);
+  rpc GetSubmissionFile(GetSubmissionFileRequest) returns (HomeworkFileURL);
+  rpc GetFeedbackFile(GetFeedbackFileRequest) returns (HomeworkFileURL);
+
 }
 
 // ==== ENUM ====
@@ -113,6 +119,22 @@ message ListFeedbacksByAssignmentRequest {
 
 message ListFeedbacksResponse {
   repeated Feedback feedbacks = 1;
+}
+
+message GetAssignmentFileRequest {
+  string assignment_id = 1;
+}
+
+message GetSubmissionFileRequest {
+  string submission_id = 1;
+}
+
+message GetFeedbackFileRequest {
+  string feedback_id = 1;
+}
+
+message HomeworkFileURL {
+  string url = 1;
 }
 
 // ==== OUTPUT MODELS ====
