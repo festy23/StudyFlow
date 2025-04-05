@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package schedule.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ==== SERVICE ====
+
+service ScheduleService {
+  // --- SLOTS ---
+  rpc GetSlot(GetSlotRequest) returns (Slot);
+  rpc CreateSlot(CreateSlotRequest) returns (Slot);
+  rpc UpdateSlot(UpdateSlotRequest) returns (Slot);
+  rpc DeleteSlot(DeleteSlotRequest) returns (Empty);
+  rpc ListSlotsByTutor(ListSlotsByTutorRequest) returns (ListSlotsResponse);
+
+  // --- LESSONS ---
+  rpc GetLesson(GetLessonRequest) returns (Lesson);
+  rpc CreateLesson(CreateLessonRequest) returns (Lesson);
+  rpc UpdateLesson(UpdateLessonRequest) returns (Lesson);
+  rpc CancelLesson(CancelLessonRequest) returns (Lesson);
+
+  rpc ListLessonsByTutor(ListLessonsByTutorRequest) returns (ListLessonsResponse);
+  rpc ListLessonsByStudent(ListLessonsByStudentRequest) returns (ListLessonsResponse);
+  rpc ListLessonsByPair(ListLessonsByPairRequest) returns (ListLessonsResponse);
+}
+
+// ==== ENUM ====
+
+enum LessonStatusFilter {
+  BOOKED = 0;
+  CANCELLED = 1;
+  COMPLETED = 2;
+}
+
+// ==== SLOTS ====
+
+message GetSlotRequest {
+  string id = 1;
+}
+
+message CreateSlotRequest {
+  string tutor_id = 1;
+  google.protobuf.Timestamp starts_at = 2;
+  google.protobuf.Timestamp ends_at = 3;
+}
+
+message UpdateSlotRequest {
+  string id = 1;
+  google.protobuf.Timestamp starts_at = 2;
+  google.protobuf.Timestamp ends_at = 3;
+}
+
+message DeleteSlotRequest {
+  string id = 1;
+}
+
+message ListSlotsByTutorRequest {
+  string tutor_id = 1;
+  bool only_available = 2; // если true, фильтрует is_booked = false
+}
+
+message ListSlotsResponse {
+  repeated Slot slots = 1;
+}
+
+message Slot {
+  string id = 1;
+  string tutor_id = 2;
+  google.protobuf.Timestamp starts_at = 3;
+  google.protobuf.Timestamp ends_at = 4;
+  bool is_booked = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp edited_at = 7;
+}
+
+// ==== LESSONS ====
+
+message GetLessonRequest {
+  string id = 1;
+}
+
+message CreateLessonRequest {
+  string slot_id = 1;
+  string student_id = 2;
+}
+
+message UpdateLessonRequest {
+  string id = 1;
+  string connection_link = 2;
+  int32 price_rub = 3;
+  string payment_info = 4;
+}
+
+message CancelLessonRequest {
+  string id = 1;
+}
+
+message ListLessonsByTutorRequest {
+  string tutor_id = 1;
+  repeated LessonStatusFilter status_filter = 2;
+}
+
+message ListLessonsByStudentRequest {
+  string student_id = 1;
+  repeated LessonStatusFilter status_filter = 2;
+}
+
+message ListLessonsByPairRequest {
+  string tutor_id = 1;
+  string student_id = 2;
+  repeated LessonStatusFilter status_filter = 3;
+}
+
+message ListLessonsResponse {
+  repeated Lesson lessons = 1;
+}
+
+message Lesson {
+  string id = 1;
+  string slot_id = 2;
+  string student_id = 3;
+  string status = 4; // booked / cancelled / completed
+  bool is_paid = 5;
+  string connection_link = 6;
+  int32 price_rub = 7;
+  string payment_info = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp edited_at = 10;
+}
+
+message Empty {}
