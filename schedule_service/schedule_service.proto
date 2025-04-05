@@ -23,6 +23,9 @@ service ScheduleService {
   rpc ListLessonsByTutor(ListLessonsByTutorRequest) returns (ListLessonsResponse);
   rpc ListLessonsByStudent(ListLessonsByStudentRequest) returns (ListLessonsResponse);
   rpc ListLessonsByPair(ListLessonsByPairRequest) returns (ListLessonsResponse);
+
+  // --- INTERNAL ---
+  rpc ListCompletedUnpaidLessons(ListCompletedUnpaidLessonsRequest) returns (ListLessonsResponse);
 }
 
 // ==== ENUM ====
@@ -111,6 +114,11 @@ message ListLessonsByPairRequest {
   string student_id = 2;
   repeated LessonStatusFilter status_filter = 3;
 }
+
+message ListCompletedUnpaidLessonsRequest {
+  google.protobuf.Timestamp after = 1;  // вернуть только после этой даты (опционально)
+}
+
 
 message ListLessonsResponse {
   repeated Lesson lessons = 1;
