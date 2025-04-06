@@ -1,4 +1,4 @@
-package interceptor
+package interceptors
 
 import (
 	"common_library/ctxdata"
