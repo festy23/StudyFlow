@@ -15,6 +15,14 @@
   - получает уроки из schedule_service.ListCompletedUnpaidLessons
   - генерируется ивент-напоминания об оплате и отправляется в кафку
 
+---
+
+## зависимости
+
+- user service
+- schedule service
+- file service
+
 
 ---
 
