@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package file.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service FileService {
+  // Инициализация загрузки файла: создаёт запись и возвращает временную ссылку
+  rpc InitUpload(InitUploadRequest) returns (InitUploadResponse);
+
+  // Получение временной ссылки на скачивание файла
+  rpc GenerateDownloadURL(GenerateDownloadURLRequest) returns (DownloadURL);
+
+  // Получение метаданных файла
+  rpc GetFileMeta(GetFileMetaRequest) returns (File);
+}
+
+// ==== INIT UPLOAD ====
+
+message InitUploadRequest {
+  string uploaded_by = 1;      // user_id
+  string file_name = 2;        // имя файла (например: homework.pdf)
+}
+
+message InitUploadResponse {
+  string file_id = 1;
+  string upload_url = 2;
+  string method = 3;                  // обычно "PUT"
+  map<string, string> headers = 4;    // например: Content-Type
+}
+
+// ==== DOWNLOAD ====
+
+message GenerateDownloadURLRequest {
+  string file_id = 1;
+}
+
+message DownloadURL {
+  string url = 1;
+}
+
+// ==== GET FILE ====
+
+message GetFileMetaRequest {
+  string file_id = 1;
+}
+
+message File {
+  string id = 1;
+  string uploaded_by = 2;
+  string file_name = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
