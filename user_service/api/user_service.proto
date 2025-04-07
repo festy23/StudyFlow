@@ -47,9 +47,10 @@ message GetUserRequest {
 }
 
 message UpdateUserRequest {
-	string first_name = 1;
-	string last_name = 2;
-	string timezone = 3;
+	string id = 1;
+	string first_name = 2;
+	string last_name = 3;
+	string timezone = 4;
 }
 
 message GetTutorProfileByUserIdRequest {
