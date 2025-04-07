@@ -57,6 +57,13 @@ message GetTutorProfileByUserIdRequest {
 	string user_id = 1;
 }
 
+message UpdateTutorProfileRequest {
+	string user_id = 1;
+	string payment_info = 2;
+	int32 lesson_price_rub = 3;
+	string lesson_connection_link = 4;
+}
+
 message GetTutorStudentRequest {
 	string tutor_id = 1;
 	string student_id = 2;
