@@ -1,6 +1,8 @@
 package ctxdata
 
-import "context"
+import (
+	"context"
+)
 
 type traceIDKey struct{}
 type userIDKey struct{}
