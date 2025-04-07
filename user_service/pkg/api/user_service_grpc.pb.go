@@ -278,7 +278,7 @@ func (UnimplementedUserServiceServer) testEmbeddedByValue()                     
 
 // UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to UserServiceServer will
-// result in compilation errdefs.
+// result in compilation errors.
 type UnsafeUserServiceServer interface {
 	mustEmbedUnimplementedUserServiceServer()
 }
