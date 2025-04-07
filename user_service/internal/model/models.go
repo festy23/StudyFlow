@@ -54,9 +54,9 @@ type User struct {
 	Role         Role         `db:"role"`
 	AuthProvider AuthProvider `db:"auth_provider"`
 	Status       UserStatus   `db:"status"`
-	FirstName    string       `db:"first_name"`
-	LastName     string       `db:"last_name"`
-	Timezone     string       `db:"timezone"`
+	FirstName    *string      `db:"first_name"`
+	LastName     *string      `db:"last_name"`
+	Timezone     *string      `db:"timezone"`
 	CreatedAt    time.Time    `db:"created_at"`
 	EditedAt     time.Time    `db:"edited_at"`
 }
@@ -65,16 +65,16 @@ type TelegramAccount struct {
 	id         uuid.UUID `db:"id"`
 	UserId     uuid.UUID `db:"user_id"`
 	TelegramId int64     `db:"telegram_id"`
-	Username   string    `db:"user_name"`
+	Username   *string   `db:"user_name"`
 	CreatedAt  time.Time `db:"created_at"`
 }
 
 type TutorProfile struct {
 	Id                   uuid.UUID `db:"id"`
 	UserId               uuid.UUID `db:"user_id"`
-	PaymentInfo          string    `db:"payment_info"`
-	LessonPriceRub       int       `db:"lesson_price_rub"`
-	LessonConnectionLink string    `db:"lesson_connection_link"`
+	PaymentInfo          *string   `db:"payment_info"`
+	LessonPriceRub       *int      `db:"lesson_price_rub"`
+	LessonConnectionLink *string   `db:"lesson_connection_link"`
 	CreatedAt            time.Time `db:"created_at"`
 	EditedAt             time.Time `db:"edited_at"`
 }
@@ -98,8 +98,8 @@ type TutorStudent struct {
 	Id                   uuid.UUID          `db:"id"`
 	TutorId              uuid.UUID          `db:"tutor_id"`
 	StudentId            uuid.UUID          `db:"student_id"`
-	LessonPriceRub       int                `db:"lesson_price_rub"`
-	LessonConnectionLink string             `db:"lesson_connection_link"`
+	LessonPriceRub       *int               `db:"lesson_price_rub"`
+	LessonConnectionLink *string            `db:"lesson_connection_link"`
 	Status               TutorStudentStatus `db:"status"`
 	CreatedAt            time.Time          `db:"created_at"`
 	EditedAt             time.Time          `db:"edited_at"`
@@ -108,15 +108,16 @@ type TutorStudent struct {
 // not from db
 type TutorStudentContext struct {
 	RelationshipExists bool
-	RelationshipStatus TutorStudentStatus
+	RelationshipStatus *TutorStudentStatus
 
-	LessonPriceRub       int
-	LessonConnectionLink string
-	PaymentInfo          string
+	LessonPriceRub       *int
+	LessonConnectionLink *string
+	PaymentInfo          *string
 }
 
 type UserPublic struct {
+	Id        uuid.UUID
 	Role      Role
-	FirstName string
-	LastName  string
+	FirstName *string
+	LastName  *string
 }
