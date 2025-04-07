@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package user.v1;
 
+option go_package = "pkg/api";
+
 import "google/protobuf/timestamp.proto";
 
 service UserService {
