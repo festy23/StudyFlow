@@ -115,9 +115,9 @@ message ResolvedTutorStudentContext {
 	bool relationship_exists = 1;
 	string relationship_status = 2; // invited / active / blocked / removed
 
-	int32 lesson_price_rub = 3;
-	string lesson_connection_link = 4;
-	string payment_info = 5;
+	optional int32 lesson_price_rub = 3;
+	optional string lesson_connection_link = 4;
+	optional string payment_info = 5;
 }
 
 message Empty {}

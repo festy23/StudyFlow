@@ -854,9 +854,9 @@ type ResolvedTutorStudentContext struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	RelationshipExists   bool                   `protobuf:"varint,1,opt,name=relationship_exists,json=relationshipExists,proto3" json:"relationship_exists,omitempty"`
 	RelationshipStatus   string                 `protobuf:"bytes,2,opt,name=relationship_status,json=relationshipStatus,proto3" json:"relationship_status,omitempty"` // invited / active / blocked / removed
-	LessonPriceRub       int32                  `protobuf:"varint,3,opt,name=lesson_price_rub,json=lessonPriceRub,proto3" json:"lesson_price_rub,omitempty"`
-	LessonConnectionLink string                 `protobuf:"bytes,4,opt,name=lesson_connection_link,json=lessonConnectionLink,proto3" json:"lesson_connection_link,omitempty"`
-	PaymentInfo          string                 `protobuf:"bytes,5,opt,name=payment_info,json=paymentInfo,proto3" json:"payment_info,omitempty"`
+	LessonPriceRub       *int32                 `protobuf:"varint,3,opt,name=lesson_price_rub,json=lessonPriceRub,proto3,oneof" json:"lesson_price_rub,omitempty"`
+	LessonConnectionLink *string                `protobuf:"bytes,4,opt,name=lesson_connection_link,json=lessonConnectionLink,proto3,oneof" json:"lesson_connection_link,omitempty"`
+	PaymentInfo          *string                `protobuf:"bytes,5,opt,name=payment_info,json=paymentInfo,proto3,oneof" json:"payment_info,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -906,22 +906,22 @@ func (x *ResolvedTutorStudentContext) GetRelationshipStatus() string {
 }
 
 func (x *ResolvedTutorStudentContext) GetLessonPriceRub() int32 {
-	if x != nil {
-		return x.LessonPriceRub
+	if x != nil && x.LessonPriceRub != nil {
+		return *x.LessonPriceRub
 	}
 	return 0
 }
 
 func (x *ResolvedTutorStudentContext) GetLessonConnectionLink() string {
-	if x != nil {
-		return x.LessonConnectionLink
+	if x != nil && x.LessonConnectionLink != nil {
+		return *x.LessonConnectionLink
 	}
 	return ""
 }
 
 func (x *ResolvedTutorStudentContext) GetPaymentInfo() string {
-	if x != nil {
-		return x.PaymentInfo
+	if x != nil && x.PaymentInfo != nil {
+		return *x.PaymentInfo
 	}
 	return ""
 }
@@ -1411,13 +1411,16 @@ const file_user_service_proto_rawDesc = "" +
 	"!ResolveTutorStudentContextRequest\x12\x19\n" +
 	"\btutor_id\x18\x01 \x01(\tR\atutorId\x12\x1d\n" +
 	"\n" +
-	"student_id\x18\x02 \x01(\tR\tstudentId\"\x82\x02\n" +
+	"student_id\x18\x02 \x01(\tR\tstudentId\"\xd2\x02\n" +
 	"\x1bResolvedTutorStudentContext\x12/\n" +
 	"\x13relationship_exists\x18\x01 \x01(\bR\x12relationshipExists\x12/\n" +
-	"\x13relationship_status\x18\x02 \x01(\tR\x12relationshipStatus\x12(\n" +
-	"\x10lesson_price_rub\x18\x03 \x01(\x05R\x0elessonPriceRub\x124\n" +
-	"\x16lesson_connection_link\x18\x04 \x01(\tR\x14lessonConnectionLink\x12!\n" +
-	"\fpayment_info\x18\x05 \x01(\tR\vpaymentInfo\"\a\n" +
+	"\x13relationship_status\x18\x02 \x01(\tR\x12relationshipStatus\x12-\n" +
+	"\x10lesson_price_rub\x18\x03 \x01(\x05H\x00R\x0elessonPriceRub\x88\x01\x01\x129\n" +
+	"\x16lesson_connection_link\x18\x04 \x01(\tH\x01R\x14lessonConnectionLink\x88\x01\x01\x12&\n" +
+	"\fpayment_info\x18\x05 \x01(\tH\x02R\vpaymentInfo\x88\x01\x01B\x13\n" +
+	"\x11_lesson_price_rubB\x19\n" +
+	"\x17_lesson_connection_linkB\x0f\n" +
+	"\r_payment_info\"\a\n" +
 	"\x05Empty\"\xec\x02\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -1578,6 +1581,7 @@ func file_user_service_proto_init() {
 	file_user_service_proto_msgTypes[5].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[7].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[8].OneofWrappers = []any{}
+	file_user_service_proto_msgTypes[15].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[17].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[18].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[19].OneofWrappers = []any{}
