@@ -1,5 +1,7 @@
 package model
 
+import "github.com/google/uuid"
+
 type RegisterViaTelegramInput struct {
 	TelegramId string
 	Role       Role
@@ -20,20 +22,20 @@ type UpdateUserInput struct {
 }
 
 type CreateTutorStudentInput struct {
-	TutorId              string
-	StudentId            string
-	LessonPriceRub       *int
+	TutorId              uuid.UUID
+	StudentId            uuid.UUID
+	LessonPriceRub       *int32
 	LessonConnectionLink *string
 }
 
 type UpdateTutorStudentInput struct {
-	LessonPriceRub       *int
+	LessonPriceRub       *int32
 	LessonConnectionLink *string
 	Status               *TutorStudentStatus
 }
 
 type UpdateTutorProfileInput struct {
 	PaymentInfo          *string
-	LessonPriceRub       *int
+	LessonPriceRub       *int32
 	LessonConnectionLink *string
 }

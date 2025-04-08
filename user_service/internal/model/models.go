@@ -73,7 +73,7 @@ type TutorProfile struct {
 	Id                   uuid.UUID `db:"id"`
 	UserId               uuid.UUID `db:"user_id"`
 	PaymentInfo          *string   `db:"payment_info"`
-	LessonPriceRub       *int      `db:"lesson_price_rub"`
+	LessonPriceRub       *int32    `db:"lesson_price_rub"`
 	LessonConnectionLink *string   `db:"lesson_connection_link"`
 	CreatedAt            time.Time `db:"created_at"`
 	EditedAt             time.Time `db:"edited_at"`
@@ -91,14 +91,19 @@ func (t TutorStudentStatus) String() string {
 }
 
 func (t TutorStudentStatus) IsValid() bool {
-	return t != TutorStudentStatusInvited && t != TutorStudentStatusActive
+	return t == TutorStudentStatusInvited || t == TutorStudentStatusActive
+}
+
+func TutorStudentStatusFromString(s string) (TutorStudentStatus, bool) {
+	status := TutorStudentStatus(s)
+	return status, status.IsValid()
 }
 
 type TutorStudent struct {
 	Id                   uuid.UUID          `db:"id"`
 	TutorId              uuid.UUID          `db:"tutor_id"`
 	StudentId            uuid.UUID          `db:"student_id"`
-	LessonPriceRub       *int               `db:"lesson_price_rub"`
+	LessonPriceRub       *int32             `db:"lesson_price_rub"`
 	LessonConnectionLink *string            `db:"lesson_connection_link"`
 	Status               TutorStudentStatus `db:"status"`
 	CreatedAt            time.Time          `db:"created_at"`
@@ -110,7 +115,7 @@ type TutorStudentContext struct {
 	RelationshipExists bool
 	RelationshipStatus *TutorStudentStatus
 
-	LessonPriceRub       *int
+	LessonPriceRub       *int32
 	LessonConnectionLink *string
 	PaymentInfo          *string
 }
