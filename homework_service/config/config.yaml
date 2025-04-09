@@ -1,0 +1,21 @@
+grpc:
+  address: ":50051"
+
+db:
+  host: "localhost"
+  port: 5432
+  user: "homework_user"
+  password: "password"
+  dbname: "homework_db"
+  sslmode: "disable"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  topic: "assignment-reminders"
+
+user_service:
+  url: "http://user-service:8080"
+
+file_service:
+  url: "http://file-service:8080"
