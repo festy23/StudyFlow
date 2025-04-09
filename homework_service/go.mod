@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
