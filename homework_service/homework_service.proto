@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package homework.v1;
 
-import "google/protobuf/timestamp.proto";
+option go_package = "./pkg/api";
+
+import "timestamp.proto";
 
 // ==== SERVICE ====
 
