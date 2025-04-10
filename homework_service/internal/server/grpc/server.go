@@ -1,9 +1,10 @@
 package grpc
 
 import (
-	"google.golang.org/grpc"
-	"homework_service/proto/homework/v1"
 	"net"
+
+	"google.golang.org/grpc"
+	v1 "homework_service/pkg/api"
 )
 
 type Server struct {

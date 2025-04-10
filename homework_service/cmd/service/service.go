@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	_ "github.com/lib/pq"
 	"homework_service/internal/app"
 	"homework_service/internal/repository"
 	"homework_service/internal/server/grpc"
@@ -15,7 +14,8 @@ import (
 	"homework_service/pkg/db"
 	"homework_service/pkg/kafka"
 	"homework_service/pkg/logger"
-	"homework_service/proto/homework/v1"
+
+	_ "github.com/lib/pq"
 )
 
 type UserClient interface {

@@ -41,8 +41,8 @@ func (s *AssignmentService) CreateAssignment(ctx context.Context, req *domain.As
 		return nil, errors.New("not a tutor-student pair")
 	}
 
-	if req.FileID != nil {
-		if !s.fileClient.FileExists(ctx, *req.FileID) {
+	if req.FileID != "" {
+		if !s.fileClient.FileExists(ctx, req.FileID) {
 			return nil, errors.New("file not found")
 		}
 	}

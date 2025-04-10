@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"homework_service/internal/domain"
 	"homework_service/internal/repository"
 	"homework_service/internal/service"
-	"homework_service/proto/homework/v1"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	v1 "homework_service/pkg/api"
 )
 
 type HomeworkHandler struct {
@@ -50,7 +51,7 @@ func (h *HomeworkHandler) CreateAssignment(ctx context.Context, req *v1.CreateAs
 		Description: req.Description,
 	}
 
-	if req.FileId != nil {
+	if req.FileId != "" {
 		assignment.FileID = req.FileId
 	}
 	if req.DueDate != nil {
@@ -90,8 +91,8 @@ func toProtoAssignment(a *domain.Assignment) *v1.Assignment {
 		EditedAt:    timestamppb.New(a.EditedAt),
 	}
 
-	if a.FileID != nil {
-		assignment.FileId = *a.FileID
+	if a.FileID != "" {
+		assignment.FileId = a.FileID
 	}
 	if a.DueDate != nil {
 		assignment.DueDate = timestamppb.New(*a.DueDate)

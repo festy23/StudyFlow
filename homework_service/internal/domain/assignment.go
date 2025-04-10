@@ -10,7 +10,7 @@ type Assignment struct {
 	StudentID   string
 	Title       string
 	Description string
-	FileID      *string
+	FileID      string
 	DueDate     *time.Time
 	CreatedAt   time.Time
 	EditedAt    time.Time
