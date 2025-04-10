@@ -86,6 +86,24 @@ func (r *AssignmentRepository) Create(ctx context.Context, assignment *domain.As
 	return nil
 }
 
+func (r *AssignmentRepository) Update(ctx context.Context, assignment *domain.Assignment) error {
+	query := `
+		UPDATE assignments 
+		SET title = $1, description = $2, file_id = $3, due_date = $4, status = $5, edited_at = $6
+		WHERE id = $7
+	`
+	_, err := r.db.ExecContext(ctx, query,
+		assignment.Title,
+		assignment.Description,
+		assignment.FileID,
+		assignment.DueDate,
+		assignment.Status,
+		time.Now(),
+		assignment.ID,
+	)
+	return err
+}
+
 func (r *AssignmentRepository) GetByID(ctx context.Context, id string) (*domain.Assignment, error) {
 	query := `
         SELECT id, tutor_id, student_id, title, description, file_id, due_date, status, 

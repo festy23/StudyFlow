@@ -1,6 +1,8 @@
 package service
 
-import "context"
+import (
+	"context"
+)
 
 type UserClient interface {
 	UserExists(ctx context.Context, userID string) bool
