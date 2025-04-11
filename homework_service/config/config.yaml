@@ -1,8 +1,9 @@
 grpc:
   address: ":50051"
+  timeout: 30
 
 db:
-  host: "localhost"
+  host: "postgres"
   port: 5432
   user: "homework_user"
   password: "password"
@@ -11,11 +12,13 @@ db:
 
 kafka:
   brokers:
-    - "localhost:9092"
+    - "kafka:9092"
   topic: "assignment-reminders"
+  group_id: "homework-service-group"
+  assignment_worker_pool_size: 5
 
-user_service:
-  url: "http://user-service:8080"
-
-file_service:
-  url: "http://file-service:8080"
+services:
+  user_service:
+    address: "user-service:50052"
+  file_service:
+    address: "file-service:50053"
