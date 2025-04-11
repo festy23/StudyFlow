@@ -20,8 +20,8 @@ type Config struct {
 }
 
 type GRPCConfig struct {
-	Address string `yaml:"address"`
-	Timeout int    `yaml:"timeout"`
+	Address string        `yaml:"address"`
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 type DBConfig struct {
@@ -34,10 +34,10 @@ type DBConfig struct {
 }
 
 type KafkaConfig struct {
-	Brokers                  []string `yaml:"brokers"`
-	Topic                    string   `yaml:"topic"`
-	GroupID                  string   `yaml:"group_id"`
-	AssignmentWorkerPoolSize int      `yaml:"assignment_worker_pool_size"`
+	Brokers        []string `yaml:"brokers"`
+	Topic          string   `yaml:"topic"`
+	GroupID        string   `yaml:"group_id"`
+	WorkerPoolSize int      `yaml:"worker_pool_size"`
 }
 
 type Services struct {
@@ -46,25 +46,11 @@ type Services struct {
 }
 
 type ServiceConfig struct {
-	Address string `yaml:"address"`
+	Address string        `yaml:"address"`
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 func Load() (*Config, error) {
-	cfg, err := loadFromYAML()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %v", err)
-	}
-
-	overrideFromEnv(cfg)
-
-	if err := validateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %v", err)
-	}
-
-	return cfg, nil
-}
-
-func loadFromYAML() (*Config, error) {
 	configPath := getConfigPath()
 	data, err := os.ReadFile(configPath)
 	if err != nil {
@@ -74,6 +60,13 @@ func loadFromYAML() (*Config, error) {
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	setDefaults(&cfg)
+	overrideFromEnv(&cfg)
+
+	if err := validateConfig(&cfg); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 
 	return &cfg, nil
@@ -99,13 +92,35 @@ func getConfigPath() string {
 	return "config.yaml"
 }
 
+func setDefaults(cfg *Config) {
+	if cfg.GRPC.Timeout == 0 {
+		cfg.GRPC.Timeout = 30 * time.Second
+	}
+
+	if cfg.Services.UserService.Timeout == 0 {
+		cfg.Services.UserService.Timeout = 10 * time.Second
+	}
+
+	if cfg.Services.FileService.Timeout == 0 {
+		cfg.Services.FileService.Timeout = 10 * time.Second
+	}
+
+	if cfg.Kafka.WorkerPoolSize == 0 {
+		cfg.Kafka.WorkerPoolSize = 5
+	}
+
+	if cfg.Kafka.GroupID == "" {
+		cfg.Kafka.GroupID = "homework-service-group"
+	}
+}
+
 func overrideFromEnv(cfg *Config) {
 	if val := os.Getenv("GRPC_ADDRESS"); val != "" {
 		cfg.GRPC.Address = val
 	}
 	if val := os.Getenv("GRPC_TIMEOUT"); val != "" {
 		if timeout, err := strconv.Atoi(val); err == nil {
-			cfg.GRPC.Timeout = timeout
+			cfg.GRPC.Timeout = time.Duration(timeout) * time.Second
 		}
 	}
 
@@ -141,15 +156,25 @@ func overrideFromEnv(cfg *Config) {
 	}
 	if val := os.Getenv("KAFKA_WORKER_POOL_SIZE"); val != "" {
 		if size, err := strconv.Atoi(val); err == nil {
-			cfg.Kafka.AssignmentWorkerPoolSize = size
+			cfg.Kafka.WorkerPoolSize = size
 		}
 	}
 
 	if val := os.Getenv("USER_SERVICE_ADDRESS"); val != "" {
 		cfg.Services.UserService.Address = val
 	}
+	if val := os.Getenv("USER_SERVICE_TIMEOUT"); val != "" {
+		if timeout, err := strconv.Atoi(val); err == nil {
+			cfg.Services.UserService.Timeout = time.Duration(timeout) * time.Second
+		}
+	}
 	if val := os.Getenv("FILE_SERVICE_ADDRESS"); val != "" {
 		cfg.Services.FileService.Address = val
+	}
+	if val := os.Getenv("FILE_SERVICE_TIMEOUT"); val != "" {
+		if timeout, err := strconv.Atoi(val); err == nil {
+			cfg.Services.FileService.Timeout = time.Duration(timeout) * time.Second
+		}
 	}
 }
 
@@ -158,20 +183,20 @@ func validateConfig(cfg *Config) error {
 		return fmt.Errorf("GRPC address must be set")
 	}
 
-	if cfg.GRPC.Timeout <= 0 {
-		cfg.GRPC.Timeout = 30
-	}
-
 	if len(cfg.Kafka.Brokers) == 0 {
 		return fmt.Errorf("at least one Kafka broker must be specified")
 	}
 
-	if cfg.Kafka.Topic == "" {
-		return fmt.Errorf("Kafka topic must be specified")
-	}
-
 	if cfg.DB.Host == "" || cfg.DB.User == "" || cfg.DB.DBName == "" {
 		return fmt.Errorf("database configuration is incomplete")
+	}
+
+	if cfg.Services.UserService.Address == "" {
+		return fmt.Errorf("user service address must be specified")
+	}
+
+	if cfg.Services.FileService.Address == "" {
+		return fmt.Errorf("file service address must be specified")
 	}
 
 	return nil
@@ -189,41 +214,11 @@ func (c *Config) GetDBConnectionString() string {
 	)
 }
 
-func (c *Config) GetGRPCAddress() string {
-	return c.GRPC.Address
-}
-
-func (c *Config) GetGRPCTimeout() time.Duration {
-	return time.Duration(c.GRPC.Timeout) * time.Second
-}
-
-func (c *Config) GetKafkaBrokers() []string {
-	return c.Kafka.Brokers
-}
-
-func (c *Config) GetKafkaTopic() string {
-	return c.Kafka.Topic
-}
-
-func (c *Config) GetKafkaGroupID() string {
-	if c.Kafka.GroupID == "" {
-		return "homework-service-group"
-	}
-	return c.Kafka.GroupID
-}
-
-func (c *Config) GetWorkerPoolSize() int {
-	if c.Kafka.AssignmentWorkerPoolSize <= 0 {
-		return 10
-	}
-	return c.Kafka.AssignmentWorkerPoolSize
-}
-
 func (c *Config) NewUserServiceClient() (*grpc.ClientConn, error) {
 	return grpc.Dial(
 		c.Services.UserService.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithTimeout(c.GetGRPCTimeout()),
+		grpc.WithTimeout(c.Services.UserService.Timeout),
 	)
 }
 
@@ -231,6 +226,6 @@ func (c *Config) NewFileServiceClient() (*grpc.ClientConn, error) {
 	return grpc.Dial(
 		c.Services.FileService.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithTimeout(c.GetGRPCTimeout()),
+		grpc.WithTimeout(c.Services.FileService.Timeout),
 	)
 }

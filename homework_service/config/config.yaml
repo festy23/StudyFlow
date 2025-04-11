@@ -1,6 +1,6 @@
 grpc:
   address: ":50051"
-  timeout: 30
+  timeout: 30s
 
 db:
   host: "postgres"
@@ -15,10 +15,12 @@ kafka:
     - "kafka:9092"
   topic: "assignment-reminders"
   group_id: "homework-service-group"
-  assignment_worker_pool_size: 5
+  worker_pool_size: 5
 
 services:
   user_service:
     address: "user-service:50052"
+    timeout: 10s
   file_service:
     address: "file-service:50053"
+    timeout: 10s
