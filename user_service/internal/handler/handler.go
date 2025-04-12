@@ -29,6 +29,7 @@ type UserService interface {
 	ListTutorStudents(ctx context.Context, tutorId uuid.UUID) ([]*model.TutorStudent, error)
 	ListTutorStudentsForStudent(ctx context.Context, studentId uuid.UUID) ([]*model.TutorStudent, error)
 	ResolveTutorStudentContext(ctx context.Context, tutorId uuid.UUID, studentId uuid.UUID) (*model.TutorStudentContext, error)
+	AcceptInvitationFromTutor(ctx context.Context, tutorId uuid.UUID) error
 }
 
 type UserServiceServer struct {
@@ -318,6 +319,19 @@ func (h *UserServiceServer) ResolveTutorStudentContext(ctx context.Context, req 
 	}
 
 	return resp, nil
+}
+
+func (h *UserServiceServer) AcceptInvitationFromTutor(ctx context.Context, req *pb.AcceptInvitationFromTutorRequest) (*pb.Empty, error) {
+	tutorId, err := uuid.Parse(req.TutorId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
+	if err := h.service.AcceptInvitationFromTutor(ctx, tutorId); err != nil {
+		return nil, mapError(err, errdefs.ErrPermissionDenied, errdefs.ErrNotFound)
+	}
+
+	return &pb.Empty{}, nil
 }
 
 func toPbUser(user *model.User) *pb.User {
