@@ -215,7 +215,7 @@ func (s *UserService) CreateTutorStudent(ctx context.Context, input *model.Creat
 		return nil, err
 	}
 
-	if err := ensureCurrentUserIsTutor(ctx); err != nil {
+	if err := ensureCurrentUserRole(ctx, model.RoleTutor); err != nil {
 		return nil, err
 	}
 
@@ -316,7 +316,41 @@ func (s *UserService) ResolveTutorStudentContext(ctx context.Context, tutorId uu
 		return nil, err
 	}
 
-	resp := &model.TutorStudentContext{}
+	resp := &model.TutorStudentContext{
+		RelationshipStatus:   ts.Status,
+		LessonPriceRub:       tutorProfile.LessonPriceRub,
+		LessonConnectionLink: tutorProfile.LessonConnectionLink,
+		PaymentInfo:          tutorProfile.PaymentInfo,
+	}
+
+	if ts.LessonPriceRub != nil {
+		resp.LessonPriceRub = ts.LessonPriceRub
+	}
+
+	if ts.LessonConnectionLink != nil {
+		resp.LessonConnectionLink = ts.LessonConnectionLink
+	}
+
+	return resp, nil
+}
+
+func (s *UserService) AcceptInvitationFromTutor(ctx context.Context, tutorId uuid.UUID) error {
+	id, err := getUserId(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := ensureCurrentUserRole(ctx, model.RoleStudent); err != nil {
+		return err
+	}
+
+	status := model.TutorStudentStatusActive
+	_, err = s.tsRepository.UpdateTutorStudent(ctx, tutorId, id, &model.UpdateTutorStudentInput{Status: &status})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getUserId(ctx context.Context) (uuid.UUID, error) {
@@ -357,12 +391,12 @@ func ensureCurrentUserIs(ctx context.Context, ids ...uuid.UUID) error {
 	return nil
 }
 
-func ensureCurrentUserIsTutor(ctx context.Context) error {
-	role, err := getRole(ctx)
+func ensureCurrentUserRole(ctx context.Context, role model.Role) error {
+	userRole, err := getRole(ctx)
 	if err != nil {
 		return err
 	}
-	if role != model.RoleTutor {
+	if userRole != role {
 		return errdefs.ErrPermissionDenied
 	}
 	return nil

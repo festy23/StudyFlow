@@ -303,16 +303,8 @@ func (h *UserServiceServer) ResolveTutorStudentContext(ctx context.Context, req 
 		return nil, mapError(err, errdefs.ErrNotFound, errdefs.ErrPermissionDenied)
 	}
 
-	var st *string = nil
-	if result.RelationshipStatus != nil {
-		s := result.RelationshipStatus.String()
-		st = &s
-	}
-
 	resp := &pb.ResolvedTutorStudentContext{
-		RelationshipExists: result.RelationshipExists,
-		RelationshipStatus: st,
-
+		RelationshipStatus:   result.RelationshipStatus.String(),
 		LessonPriceRub:       result.LessonPriceRub,
 		LessonConnectionLink: result.LessonConnectionLink,
 		PaymentInfo:          result.PaymentInfo,
