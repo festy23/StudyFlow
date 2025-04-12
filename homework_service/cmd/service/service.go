@@ -54,9 +54,30 @@ func main() {
 	userClient := app.NewUserClient(cfg.Services.User)
 	fileClient := app.NewFileClient(cfg.Services.File)
 
-	assignmentService := service.NewAssignmentService(assignmentRepo, userClient, fileClient)
-	submissionService := service.NewSubmissionService(submissionRepo, assignmentRepo, fileClient)
-	feedbackService := service.NewFeedbackService(feedbackRepo, submissionRepo, assignmentRepo, fileClient)
+	assignmentService := service.NewAssignmentService(
+		assignmentRepo,
+		userClient,
+		fileClient,
+	)
+
+	submissionService := service.NewSubmissionService(
+		submissionRepo,
+		assignmentRepo,
+		fileClient,
+	)
+
+	feedbackService := service.NewFeedbackService(
+		feedbackRepo,
+		submissionRepo,
+		assignmentRepo,
+		fileClient,
+	)
+
+	handler := grpc.NewHomeworkHandler(
+		assignmentService,
+		submissionService,
+		feedbackService,
+	)
 
 	kafkaConfig := kafka.Config{
 		Brokers: cfg.Kafka.Brokers,
@@ -68,11 +89,6 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	handler := grpc.NewHomeworkHandler(
-		assignmentService,
-		submissionService,
-		feedbackService,
-	)
 	grpcServer := grpc.NewServer(grpc.Config{Address: cfg.GRPC.Address}, handler)
 
 	listener, err := net.Listen("tcp", cfg.GRPC.Address)

@@ -7,9 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v2"
+	"user_service/pkg/api"
 )
 
 type Config struct {
@@ -211,21 +210,5 @@ func (c *Config) GetDBConnectionString() string {
 		c.DB.Password,
 		c.DB.DBName,
 		c.DB.SSLMode,
-	)
-}
-
-func (c *Config) NewUserServiceClient() (*grpc.ClientConn, error) {
-	return grpc.Dial(
-		c.Services.UserService.Address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithTimeout(c.Services.UserService.Timeout),
-	)
-}
-
-func (c *Config) NewFileServiceClient() (*grpc.ClientConn, error) {
-	return grpc.Dial(
-		c.Services.FileService.Address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithTimeout(c.Services.FileService.Timeout),
 	)
 }

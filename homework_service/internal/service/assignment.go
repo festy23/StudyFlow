@@ -10,12 +10,16 @@ import (
 )
 
 type AssignmentService struct {
-	assignmentRepo *repository.AssignmentRepository
+	assignmentRepo repository.AssignmentRepository
 	userClient     UserClient
 	fileClient     FileClient
 }
 
-func NewAssignmentService(assignmentRepo *repository.AssignmentRepository, userClient UserClient, fileClient FileClient) *AssignmentService {
+func NewAssignmentService(
+	assignmentRepo repository.AssignmentRepository,
+	userClient UserClient,
+	fileClient FileClient,
+) *AssignmentService {
 	return &AssignmentService{
 		assignmentRepo: assignmentRepo,
 		userClient:     userClient,
@@ -65,4 +69,75 @@ func (s *AssignmentService) CreateAssignment(ctx context.Context, req *domain.As
 	}
 
 	return assignment, nil
+}
+
+func (s *AssignmentService) GetAssignment(ctx context.Context, id string) (*domain.Assignment, error) {
+	assignment, err := s.assignmentRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, repository.ErrNotFound
+		}
+		return nil, err
+	}
+
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok {
+		return nil, ErrPermissionDenied
+	}
+
+	if assignment.TutorID != userID && assignment.StudentID != userID {
+		return nil, ErrPermissionDenied
+	}
+
+	return assignment, nil
+}
+
+func (s *AssignmentService) UpdateAssignment(ctx context.Context, assignment *domain.Assignment) error {
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || assignment.TutorID != userID {
+		return ErrPermissionDenied
+	}
+
+	existing, err := s.assignmentRepo.GetByID(ctx, assignment.ID)
+	if err != nil {
+		return err
+	}
+
+	if existing.TutorID != assignment.TutorID {
+		return ErrPermissionDenied
+	}
+
+	return s.assignmentRepo.Update(ctx, assignment)
+}
+
+func (s *AssignmentService) DeleteAssignment(ctx context.Context, id string) error {
+	assignment, err := s.assignmentRepo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || assignment.TutorID != userID {
+		return ErrPermissionDenied
+	}
+
+	return s.assignmentRepo.Delete(ctx, id)
+}
+
+func (s *AssignmentService) ListAssignmentsByTutor(ctx context.Context, tutorID string) ([]*domain.Assignment, error) {
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || tutorID != userID {
+		return nil, ErrPermissionDenied
+	}
+
+	return s.assignmentRepo.ListByTutorID(ctx, tutorID)
+}
+
+func (s *AssignmentService) ListAssignmentsByStudent(ctx context.Context, studentID string) ([]*domain.Assignment, error) {
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || studentID != userID {
+		return nil, ErrPermissionDenied
+	}
+
+	return s.assignmentRepo.ListByStudentID(ctx, studentID)
 }

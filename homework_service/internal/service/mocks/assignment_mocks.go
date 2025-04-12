@@ -8,11 +8,15 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockAssignmentService struct {
+type AssignmentService struct {
 	mock.Mock
 }
 
 type MockAssignmentRepository struct {
+	mock.Mock
+}
+
+type AssignmentServiceMock struct {
 	mock.Mock
 }
 
@@ -31,7 +35,7 @@ func (m *MockAssignmentRepository) FindAssignmentsDueSoon(ctx context.Context, d
 	return args.Get(0).([]*domain.Assignment), args.Error(1)
 }
 
-func (m *MockAssignmentService) CreateAssignment(ctx context.Context, assignment *domain.Assignment) (*domain.Assignment, error) {
+func (m *AssignmentServiceMock) CreateAssignment(ctx context.Context, assignment *domain.Assignment) (*domain.Assignment, error) {
 	args := m.Called(ctx, assignment)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -39,7 +43,7 @@ func (m *MockAssignmentService) CreateAssignment(ctx context.Context, assignment
 	return args.Get(0).(*domain.Assignment), args.Error(1)
 }
 
-func (m *MockAssignmentService) GetAssignment(ctx context.Context, id string) (*domain.Assignment, error) {
+func (m *AssignmentService) GetAssignment(ctx context.Context, id string) (*domain.Assignment, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -47,12 +51,12 @@ func (m *MockAssignmentService) GetAssignment(ctx context.Context, id string) (*
 	return args.Get(0).(*domain.Assignment), args.Error(1)
 }
 
-func (m *MockAssignmentService) UpdateAssignment(ctx context.Context, assignment *domain.Assignment) error {
+func (m *AssignmentService) UpdateAssignment(ctx context.Context, assignment *domain.Assignment) error {
 	args := m.Called(ctx, assignment)
 	return args.Error(0)
 }
 
-func (m *MockAssignmentService) ListAssignments(ctx context.Context, filter domain.AssignmentFilter) ([]*domain.Assignment, error) {
+func (m *AssignmentService) ListAssignments(ctx context.Context, filter domain.AssignmentFilter) ([]*domain.Assignment, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
