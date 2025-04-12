@@ -113,8 +113,7 @@ message ResolveTutorStudentContextRequest {
 }
 
 message ResolvedTutorStudentContext {
-	bool relationship_exists = 1;
-	optional string relationship_status = 2; // invited / active / blocked / removed
+	string relationship_status = 2; // invited / active / blocked / removed
 
 	optional int32 lesson_price_rub = 3;
 	optional string lesson_connection_link = 4;
