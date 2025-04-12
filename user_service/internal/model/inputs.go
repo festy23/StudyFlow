@@ -3,7 +3,7 @@ package model
 import "github.com/google/uuid"
 
 type RegisterViaTelegramInput struct {
-	TelegramId string
+	TelegramId int64
 	Role       Role
 	Username   *string
 	FirstName  *string

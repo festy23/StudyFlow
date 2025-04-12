@@ -24,7 +24,7 @@ const (
 
 type RegisterViaTelegramRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TelegramId    string                 `protobuf:"bytes,1,opt,name=telegram_id,json=telegramId,proto3" json:"telegram_id,omitempty"`
+	TelegramId    int64                  `protobuf:"varint,1,opt,name=telegram_id,json=telegramId,proto3" json:"telegram_id,omitempty"`
 	Role          string                 `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
 	Username      *string                `protobuf:"bytes,3,opt,name=username,proto3,oneof" json:"username,omitempty"`
 	FirstName     *string                `protobuf:"bytes,4,opt,name=first_name,json=firstName,proto3,oneof" json:"first_name,omitempty"`
@@ -64,11 +64,11 @@ func (*RegisterViaTelegramRequest) Descriptor() ([]byte, []int) {
 	return file_user_service_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *RegisterViaTelegramRequest) GetTelegramId() string {
+func (x *RegisterViaTelegramRequest) GetTelegramId() int64 {
 	if x != nil {
 		return x.TelegramId
 	}
-	return ""
+	return 0
 }
 
 func (x *RegisterViaTelegramRequest) GetRole() string {
@@ -1336,7 +1336,7 @@ const file_user_service_proto_rawDesc = "" +
 	"\n" +
 	"\x12user_service.proto\x12\auser.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x90\x02\n" +
 	"\x1aRegisterViaTelegramRequest\x12\x1f\n" +
-	"\vtelegram_id\x18\x01 \x01(\tR\n" +
+	"\vtelegram_id\x18\x01 \x01(\x03R\n" +
 	"telegramId\x12\x12\n" +
 	"\x04role\x18\x02 \x01(\tR\x04role\x12\x1f\n" +
 	"\busername\x18\x03 \x01(\tH\x00R\busername\x88\x01\x01\x12\"\n" +

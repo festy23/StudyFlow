@@ -42,7 +42,7 @@ func NewUserServiceServer(userService UserService) *UserServiceServer {
 
 func (h *UserServiceServer) RegisterViaTelegram(ctx context.Context, req *pb.RegisterViaTelegramRequest) (*pb.User, error) {
 	input := &model.RegisterViaTelegramInput{
-		TelegramId: req.GetTelegramId(),
+		TelegramId: req.TelegramId,
 		Username:   req.Username,
 		FirstName:  req.FirstName,
 		LastName:   req.LastName,

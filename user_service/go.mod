@@ -3,6 +3,7 @@ module userservice
 go 1.24.0
 
 require (
+	common_library v0.0.0-00010101000000-000000000000
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
@@ -30,3 +31,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )
+
+replace common_library => ../common_library
