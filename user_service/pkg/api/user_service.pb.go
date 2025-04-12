@@ -926,6 +926,50 @@ func (x *ResolvedTutorStudentContext) GetPaymentInfo() string {
 	return ""
 }
 
+type AcceptInvitationFromTutorRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TutorId       string                 `protobuf:"bytes,1,opt,name=tutor_id,json=tutorId,proto3" json:"tutor_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptInvitationFromTutorRequest) Reset() {
+	*x = AcceptInvitationFromTutorRequest{}
+	mi := &file_user_service_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptInvitationFromTutorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptInvitationFromTutorRequest) ProtoMessage() {}
+
+func (x *AcceptInvitationFromTutorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptInvitationFromTutorRequest.ProtoReflect.Descriptor instead.
+func (*AcceptInvitationFromTutorRequest) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *AcceptInvitationFromTutorRequest) GetTutorId() string {
+	if x != nil {
+		return x.TutorId
+	}
+	return ""
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -934,7 +978,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_user_service_proto_msgTypes[16]
+	mi := &file_user_service_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -946,7 +990,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_user_service_proto_msgTypes[16]
+	mi := &file_user_service_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -959,7 +1003,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_user_service_proto_rawDescGZIP(), []int{16}
+	return file_user_service_proto_rawDescGZIP(), []int{17}
 }
 
 type User struct {
@@ -979,7 +1023,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_user_service_proto_msgTypes[17]
+	mi := &file_user_service_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -991,7 +1035,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_user_service_proto_msgTypes[17]
+	mi := &file_user_service_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1004,7 +1048,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_user_service_proto_rawDescGZIP(), []int{17}
+	return file_user_service_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *User) GetId() string {
@@ -1082,7 +1126,7 @@ type UserPublic struct {
 
 func (x *UserPublic) Reset() {
 	*x = UserPublic{}
-	mi := &file_user_service_proto_msgTypes[18]
+	mi := &file_user_service_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1094,7 +1138,7 @@ func (x *UserPublic) String() string {
 func (*UserPublic) ProtoMessage() {}
 
 func (x *UserPublic) ProtoReflect() protoreflect.Message {
-	mi := &file_user_service_proto_msgTypes[18]
+	mi := &file_user_service_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1107,7 +1151,7 @@ func (x *UserPublic) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserPublic.ProtoReflect.Descriptor instead.
 func (*UserPublic) Descriptor() ([]byte, []int) {
-	return file_user_service_proto_rawDescGZIP(), []int{18}
+	return file_user_service_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *UserPublic) GetId() string {
@@ -1153,7 +1197,7 @@ type TutorProfile struct {
 
 func (x *TutorProfile) Reset() {
 	*x = TutorProfile{}
-	mi := &file_user_service_proto_msgTypes[19]
+	mi := &file_user_service_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1165,7 +1209,7 @@ func (x *TutorProfile) String() string {
 func (*TutorProfile) ProtoMessage() {}
 
 func (x *TutorProfile) ProtoReflect() protoreflect.Message {
-	mi := &file_user_service_proto_msgTypes[19]
+	mi := &file_user_service_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1178,7 +1222,7 @@ func (x *TutorProfile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TutorProfile.ProtoReflect.Descriptor instead.
 func (*TutorProfile) Descriptor() ([]byte, []int) {
-	return file_user_service_proto_rawDescGZIP(), []int{19}
+	return file_user_service_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *TutorProfile) GetId() string {
@@ -1246,7 +1290,7 @@ type TutorStudent struct {
 
 func (x *TutorStudent) Reset() {
 	*x = TutorStudent{}
-	mi := &file_user_service_proto_msgTypes[20]
+	mi := &file_user_service_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1258,7 +1302,7 @@ func (x *TutorStudent) String() string {
 func (*TutorStudent) ProtoMessage() {}
 
 func (x *TutorStudent) ProtoReflect() protoreflect.Message {
-	mi := &file_user_service_proto_msgTypes[20]
+	mi := &file_user_service_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1271,7 +1315,7 @@ func (x *TutorStudent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TutorStudent.ProtoReflect.Descriptor instead.
 func (*TutorStudent) Descriptor() ([]byte, []int) {
-	return file_user_service_proto_rawDescGZIP(), []int{20}
+	return file_user_service_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *TutorStudent) GetId() string {
@@ -1421,7 +1465,9 @@ const file_user_service_proto_rawDesc = "" +
 	"\x14_relationship_statusB\x13\n" +
 	"\x11_lesson_price_rubB\x19\n" +
 	"\x17_lesson_connection_linkB\x0f\n" +
-	"\r_payment_info\"\a\n" +
+	"\r_payment_info\"=\n" +
+	" AcceptInvitationFromTutorRequest\x12\x19\n" +
+	"\btutor_id\x18\x01 \x01(\tR\atutorId\"\a\n" +
 	"\x05Empty\"\xec\x02\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -1473,7 +1519,7 @@ const file_user_service_proto_rawDesc = "" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x127\n" +
 	"\tedited_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\beditedAtB\x13\n" +
 	"\x11_lesson_price_rubB\x19\n" +
-	"\x17_lesson_connection_link2\xc8\b\n" +
+	"\x17_lesson_connection_link2\xa0\t\n" +
 	"\vUserService\x12I\n" +
 	"\x13RegisterViaTelegram\x12#.user.v1.RegisterViaTelegramRequest\x1a\r.user.v1.User\x12M\n" +
 	"\x15AuthorizeByAuthHeader\x12%.user.v1.AuthorizeByAuthHeaderRequest\x1a\r.user.v1.User\x12&\n" +
@@ -1489,7 +1535,8 @@ const file_user_service_proto_rawDesc = "" +
 	"\x12DeleteTutorStudent\x12\".user.v1.DeleteTutorStudentRequest\x1a\x0e.user.v1.Empty\x12Z\n" +
 	"\x11ListTutorStudents\x12!.user.v1.ListTutorStudentsRequest\x1a\".user.v1.ListTutorStudentsResponse\x12c\n" +
 	"\x14ListTutorsForStudent\x12$.user.v1.ListTutorsForStudentRequest\x1a%.user.v1.ListTutorsForStudentResponse\x12n\n" +
-	"\x1aResolveTutorStudentContext\x12*.user.v1.ResolveTutorStudentContextRequest\x1a$.user.v1.ResolvedTutorStudentContextB\tZ\apkg/apib\x06proto3"
+	"\x1aResolveTutorStudentContext\x12*.user.v1.ResolveTutorStudentContextRequest\x1a$.user.v1.ResolvedTutorStudentContext\x12V\n" +
+	"\x19AcceptInvitationFromTutor\x12).user.v1.AcceptInvitationFromTutorRequest\x1a\x0e.user.v1.EmptyB\tZ\apkg/apib\x06proto3"
 
 var (
 	file_user_service_proto_rawDescOnce sync.Once
@@ -1503,7 +1550,7 @@ func file_user_service_proto_rawDescGZIP() []byte {
 	return file_user_service_proto_rawDescData
 }
 
-var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_user_service_proto_goTypes = []any{
 	(*RegisterViaTelegramRequest)(nil),        // 0: user.v1.RegisterViaTelegramRequest
 	(*AuthorizeByAuthHeaderRequest)(nil),      // 1: user.v1.AuthorizeByAuthHeaderRequest
@@ -1521,28 +1568,29 @@ var file_user_service_proto_goTypes = []any{
 	(*ListTutorsForStudentResponse)(nil),      // 13: user.v1.ListTutorsForStudentResponse
 	(*ResolveTutorStudentContextRequest)(nil), // 14: user.v1.ResolveTutorStudentContextRequest
 	(*ResolvedTutorStudentContext)(nil),       // 15: user.v1.ResolvedTutorStudentContext
-	(*Empty)(nil),                             // 16: user.v1.Empty
-	(*User)(nil),                              // 17: user.v1.User
-	(*UserPublic)(nil),                        // 18: user.v1.UserPublic
-	(*TutorProfile)(nil),                      // 19: user.v1.TutorProfile
-	(*TutorStudent)(nil),                      // 20: user.v1.TutorStudent
-	(*timestamppb.Timestamp)(nil),             // 21: google.protobuf.Timestamp
+	(*AcceptInvitationFromTutorRequest)(nil),  // 16: user.v1.AcceptInvitationFromTutorRequest
+	(*Empty)(nil),                             // 17: user.v1.Empty
+	(*User)(nil),                              // 18: user.v1.User
+	(*UserPublic)(nil),                        // 19: user.v1.UserPublic
+	(*TutorProfile)(nil),                      // 20: user.v1.TutorProfile
+	(*TutorStudent)(nil),                      // 21: user.v1.TutorStudent
+	(*timestamppb.Timestamp)(nil),             // 22: google.protobuf.Timestamp
 }
 var file_user_service_proto_depIdxs = []int32{
-	20, // 0: user.v1.ListTutorStudentsResponse.students:type_name -> user.v1.TutorStudent
-	20, // 1: user.v1.ListTutorsForStudentResponse.tutors:type_name -> user.v1.TutorStudent
-	21, // 2: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	21, // 3: user.v1.User.edited_at:type_name -> google.protobuf.Timestamp
-	21, // 4: user.v1.TutorProfile.created_at:type_name -> google.protobuf.Timestamp
-	21, // 5: user.v1.TutorProfile.edited_at:type_name -> google.protobuf.Timestamp
-	21, // 6: user.v1.TutorStudent.created_at:type_name -> google.protobuf.Timestamp
-	21, // 7: user.v1.TutorStudent.edited_at:type_name -> google.protobuf.Timestamp
+	21, // 0: user.v1.ListTutorStudentsResponse.students:type_name -> user.v1.TutorStudent
+	21, // 1: user.v1.ListTutorsForStudentResponse.tutors:type_name -> user.v1.TutorStudent
+	22, // 2: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	22, // 3: user.v1.User.edited_at:type_name -> google.protobuf.Timestamp
+	22, // 4: user.v1.TutorProfile.created_at:type_name -> google.protobuf.Timestamp
+	22, // 5: user.v1.TutorProfile.edited_at:type_name -> google.protobuf.Timestamp
+	22, // 6: user.v1.TutorStudent.created_at:type_name -> google.protobuf.Timestamp
+	22, // 7: user.v1.TutorStudent.edited_at:type_name -> google.protobuf.Timestamp
 	0,  // 8: user.v1.UserService.RegisterViaTelegram:input_type -> user.v1.RegisterViaTelegramRequest
 	1,  // 9: user.v1.UserService.AuthorizeByAuthHeader:input_type -> user.v1.AuthorizeByAuthHeaderRequest
-	16, // 10: user.v1.UserService.GetMe:input_type -> user.v1.Empty
+	17, // 10: user.v1.UserService.GetMe:input_type -> user.v1.Empty
 	2,  // 11: user.v1.UserService.GetUser:input_type -> user.v1.GetUserRequest
 	3,  // 12: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
-	19, // 13: user.v1.UserService.UpdateTutorProfile:input_type -> user.v1.TutorProfile
+	20, // 13: user.v1.UserService.UpdateTutorProfile:input_type -> user.v1.TutorProfile
 	4,  // 14: user.v1.UserService.GetTutorProfileByUserId:input_type -> user.v1.GetTutorProfileByUserIdRequest
 	6,  // 15: user.v1.UserService.GetTutorStudent:input_type -> user.v1.GetTutorStudentRequest
 	7,  // 16: user.v1.UserService.CreateTutorStudent:input_type -> user.v1.CreateTutorStudentRequest
@@ -1551,22 +1599,24 @@ var file_user_service_proto_depIdxs = []int32{
 	10, // 19: user.v1.UserService.ListTutorStudents:input_type -> user.v1.ListTutorStudentsRequest
 	12, // 20: user.v1.UserService.ListTutorsForStudent:input_type -> user.v1.ListTutorsForStudentRequest
 	14, // 21: user.v1.UserService.ResolveTutorStudentContext:input_type -> user.v1.ResolveTutorStudentContextRequest
-	17, // 22: user.v1.UserService.RegisterViaTelegram:output_type -> user.v1.User
-	17, // 23: user.v1.UserService.AuthorizeByAuthHeader:output_type -> user.v1.User
-	17, // 24: user.v1.UserService.GetMe:output_type -> user.v1.User
-	18, // 25: user.v1.UserService.GetUser:output_type -> user.v1.UserPublic
-	17, // 26: user.v1.UserService.UpdateUser:output_type -> user.v1.User
-	19, // 27: user.v1.UserService.UpdateTutorProfile:output_type -> user.v1.TutorProfile
-	19, // 28: user.v1.UserService.GetTutorProfileByUserId:output_type -> user.v1.TutorProfile
-	20, // 29: user.v1.UserService.GetTutorStudent:output_type -> user.v1.TutorStudent
-	20, // 30: user.v1.UserService.CreateTutorStudent:output_type -> user.v1.TutorStudent
-	20, // 31: user.v1.UserService.UpdateTutorStudent:output_type -> user.v1.TutorStudent
-	16, // 32: user.v1.UserService.DeleteTutorStudent:output_type -> user.v1.Empty
-	11, // 33: user.v1.UserService.ListTutorStudents:output_type -> user.v1.ListTutorStudentsResponse
-	13, // 34: user.v1.UserService.ListTutorsForStudent:output_type -> user.v1.ListTutorsForStudentResponse
-	15, // 35: user.v1.UserService.ResolveTutorStudentContext:output_type -> user.v1.ResolvedTutorStudentContext
-	22, // [22:36] is the sub-list for method output_type
-	8,  // [8:22] is the sub-list for method input_type
+	16, // 22: user.v1.UserService.AcceptInvitationFromTutor:input_type -> user.v1.AcceptInvitationFromTutorRequest
+	18, // 23: user.v1.UserService.RegisterViaTelegram:output_type -> user.v1.User
+	18, // 24: user.v1.UserService.AuthorizeByAuthHeader:output_type -> user.v1.User
+	18, // 25: user.v1.UserService.GetMe:output_type -> user.v1.User
+	19, // 26: user.v1.UserService.GetUser:output_type -> user.v1.UserPublic
+	18, // 27: user.v1.UserService.UpdateUser:output_type -> user.v1.User
+	20, // 28: user.v1.UserService.UpdateTutorProfile:output_type -> user.v1.TutorProfile
+	20, // 29: user.v1.UserService.GetTutorProfileByUserId:output_type -> user.v1.TutorProfile
+	21, // 30: user.v1.UserService.GetTutorStudent:output_type -> user.v1.TutorStudent
+	21, // 31: user.v1.UserService.CreateTutorStudent:output_type -> user.v1.TutorStudent
+	21, // 32: user.v1.UserService.UpdateTutorStudent:output_type -> user.v1.TutorStudent
+	17, // 33: user.v1.UserService.DeleteTutorStudent:output_type -> user.v1.Empty
+	11, // 34: user.v1.UserService.ListTutorStudents:output_type -> user.v1.ListTutorStudentsResponse
+	13, // 35: user.v1.UserService.ListTutorsForStudent:output_type -> user.v1.ListTutorsForStudentResponse
+	15, // 36: user.v1.UserService.ResolveTutorStudentContext:output_type -> user.v1.ResolvedTutorStudentContext
+	17, // 37: user.v1.UserService.AcceptInvitationFromTutor:output_type -> user.v1.Empty
+	23, // [23:38] is the sub-list for method output_type
+	8,  // [8:23] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
 	8,  // [8:8] is the sub-list for extension extendee
 	0,  // [0:8] is the sub-list for field type_name
@@ -1583,17 +1633,17 @@ func file_user_service_proto_init() {
 	file_user_service_proto_msgTypes[7].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[8].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[15].OneofWrappers = []any{}
-	file_user_service_proto_msgTypes[17].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[18].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[19].OneofWrappers = []any{}
 	file_user_service_proto_msgTypes[20].OneofWrappers = []any{}
+	file_user_service_proto_msgTypes[21].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_service_proto_rawDesc), len(file_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

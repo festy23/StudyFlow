@@ -26,6 +26,7 @@ service UserService {
 	rpc ListTutorsForStudent(ListTutorsForStudentRequest) returns (ListTutorsForStudentResponse);
 
 	rpc ResolveTutorStudentContext(ResolveTutorStudentContextRequest) returns (ResolvedTutorStudentContext);
+	rpc AcceptInvitationFromTutor(AcceptInvitationFromTutorRequest) returns (Empty);
 }
 
 // ==== REQUESTS ====
@@ -118,6 +119,10 @@ message ResolvedTutorStudentContext {
 	optional int32 lesson_price_rub = 3;
 	optional string lesson_connection_link = 4;
 	optional string payment_info = 5;
+}
+
+message AcceptInvitationFromTutorRequest {
+	string tutor_id = 1;
 }
 
 message Empty {}
