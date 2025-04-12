@@ -112,8 +112,7 @@ type TutorStudent struct {
 
 // not from db
 type TutorStudentContext struct {
-	RelationshipExists bool
-	RelationshipStatus *TutorStudentStatus
+	RelationshipStatus TutorStudentStatus
 
 	LessonPriceRub       *int32
 	LessonConnectionLink *string
