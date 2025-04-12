@@ -17,7 +17,7 @@ CREATE TABLE submissions (
     comment TEXT,
     submitted_at TIMESTAMP NOT NULL DEFAULT NOW(),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    edited_at TIMESTAMP NOT NULL DEFAULT NOW()
+    edited_at TIMESTAMP NOT NULL DEFAULT NOW()  
 );
 
 CREATE TABLE feedbacks (
