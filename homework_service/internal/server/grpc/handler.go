@@ -17,13 +17,13 @@ import (
 type HomeworkHandler struct {
 	v1.UnimplementedHomeworkServiceServer
 
-	assignmentService *service.AssignmentService
+	assignmentService service.AssignmentServiceInt
 	submissionService *service.SubmissionService
 	feedbackService   *service.FeedbackService
 }
 
 func NewHomeworkHandler(
-	assignmentService *service.AssignmentService,
+	assignmentService service.AssignmentServiceInt,
 	submissionService *service.SubmissionService,
 	feedbackService *service.FeedbackService,
 ) *HomeworkHandler {

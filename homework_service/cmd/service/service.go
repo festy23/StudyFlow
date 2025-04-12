@@ -55,7 +55,7 @@ func main() {
 	fileClient := app.NewFileClient(cfg.Services.File)
 
 	assignmentService := service.NewAssignmentService(
-		assignmentRepo,
+		*assignmentRepo,
 		userClient,
 		fileClient,
 	)

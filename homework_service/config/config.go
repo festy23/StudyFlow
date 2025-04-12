@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v2"
-	"user_service/pkg/api"
+	//нужен иморт из user_service чтобы подгружать от туда
 )
 
 type Config struct {

@@ -15,6 +15,15 @@ type AssignmentService struct {
 	fileClient     FileClient
 }
 
+type AssignmentServiceInt interface {
+	CreateAssignment(ctx context.Context, assignment *domain.Assignment) (*domain.Assignment, error)
+	GetAssignment(ctx context.Context, id string) (*domain.Assignment, error)
+	UpdateAssignment(ctx context.Context, assignment *domain.Assignment) error
+	DeleteAssignment(ctx context.Context, id string) error
+	ListAssignmentsByTutor(ctx context.Context, tutorID string) ([]*domain.Assignment, error)
+	ListAssignmentsByStudent(ctx context.Context, studentID string) ([]*domain.Assignment, error)
+}
+
 func NewAssignmentService(
 	assignmentRepo repository.AssignmentRepository,
 	userClient UserClient,
