@@ -19,18 +19,6 @@ type MockAssignmentServiceMockRecorder struct {
 	mock *MockAssignmentService
 }
 
-type AssignmentService struct {
-	mock.Mock
-}
-
-type MockAssignmentRepository struct {
-	mock.Mock
-}
-
-type AssignmentServiceMock struct {
-	mock.Mock
-}
-
 func NewMockAssignmentService(ctrl *gomock.Controller) *MockAssignmentService {
 	mock := &MockAssignmentService{ctrl: ctrl}
 	mock.recorder = &MockAssignmentServiceMockRecorder{mock}
@@ -54,6 +42,10 @@ func (mr *MockAssignmentServiceMockRecorder) CreateAssignment(ctx, assignment in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssignment", reflect.TypeOf((*MockAssignmentService)(nil).CreateAssignment), ctx, assignment)
 }
 
+type MockAssignmentRepository struct {
+	mock.Mock
+}
+
 func (m *MockAssignmentRepository) Create(ctx context.Context, assignment *domain.Assignment) error {
 	args := m.Called(ctx, assignment)
 	return args.Error(0)
@@ -64,9 +56,33 @@ func (m *MockAssignmentRepository) GetByID(ctx context.Context, id string) (*dom
 	return args.Get(0).(*domain.Assignment), args.Error(1)
 }
 
+func (m *MockAssignmentRepository) Update(ctx context.Context, assignment *domain.Assignment) error {
+	args := m.Called(ctx, assignment)
+	return args.Error(0)
+}
+
+func (m *MockAssignmentRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockAssignmentRepository) ListByTutorID(ctx context.Context, tutorID string) ([]*domain.Assignment, error) {
+	args := m.Called(ctx, tutorID)
+	return args.Get(0).([]*domain.Assignment), args.Error(1)
+}
+
+func (m *MockAssignmentRepository) ListByStudentID(ctx context.Context, studentID string) ([]*domain.Assignment, error) {
+	args := m.Called(ctx, studentID)
+	return args.Get(0).([]*domain.Assignment), args.Error(1)
+}
+
 func (m *MockAssignmentRepository) FindAssignmentsDueSoon(ctx context.Context, duration time.Duration) ([]*domain.Assignment, error) {
 	args := m.Called(ctx, duration)
 	return args.Get(0).([]*domain.Assignment), args.Error(1)
+}
+
+type AssignmentServiceMock struct {
+	mock.Mock
 }
 
 func (m *AssignmentServiceMock) CreateAssignment(ctx context.Context, assignment *domain.Assignment) (*domain.Assignment, error) {
@@ -77,7 +93,7 @@ func (m *AssignmentServiceMock) CreateAssignment(ctx context.Context, assignment
 	return args.Get(0).(*domain.Assignment), args.Error(1)
 }
 
-func (m *AssignmentService) GetAssignment(ctx context.Context, id string) (*domain.Assignment, error) {
+func (m *AssignmentServiceMock) GetAssignment(ctx context.Context, id string) (*domain.Assignment, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -85,13 +101,26 @@ func (m *AssignmentService) GetAssignment(ctx context.Context, id string) (*doma
 	return args.Get(0).(*domain.Assignment), args.Error(1)
 }
 
-func (m *AssignmentService) UpdateAssignment(ctx context.Context, assignment *domain.Assignment) error {
+func (m *AssignmentServiceMock) UpdateAssignment(ctx context.Context, assignment *domain.Assignment) error {
 	args := m.Called(ctx, assignment)
 	return args.Error(0)
 }
 
-func (m *AssignmentService) ListAssignments(ctx context.Context, filter domain.AssignmentFilter) ([]*domain.Assignment, error) {
-	args := m.Called(ctx, filter)
+func (m *AssignmentServiceMock) DeleteAssignment(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *AssignmentServiceMock) ListAssignmentsByTutor(ctx context.Context, tutorID string) ([]*domain.Assignment, error) {
+	args := m.Called(ctx, tutorID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Assignment), args.Error(1)
+}
+
+func (m *AssignmentServiceMock) ListAssignmentsByStudent(ctx context.Context, studentID string) ([]*domain.Assignment, error) {
+	args := m.Called(ctx, studentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

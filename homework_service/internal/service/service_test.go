@@ -134,7 +134,7 @@ func TestFeedbackService_Integration(t *testing.T) {
 		mockAssignmentRepo.EXPECT().GetByID(gomock.Any(), "assignment-123").Return(assignment, nil)
 
 		ctx := context.WithValue(context.Background(), "user_role", "tutor")
-		ctx = context.WithValue(ctx, "user_id", "wrong-tutor") // Different tutor
+		ctx = context.WithValue(ctx, "user_id", "wrong-tutor")
 		_, err := feedbackService.CreateFeedback(ctx, feedback)
 		assert.Equal(t, service.ErrPermissionDenied, err)
 	})
