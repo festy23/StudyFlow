@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package file.v1;
 
+option go_package = "pkg/api";
+
 import "google/protobuf/timestamp.proto";
 
 service FileService {
@@ -25,8 +27,7 @@ message InitUploadRequest {
 message InitUploadResponse {
   string file_id = 1;
   string upload_url = 2;
-  string method = 3;                  // обычно "PUT"
-  map<string, string> headers = 4;    // например: Content-Type
+  string method = 3;
 }
 
 // ==== DOWNLOAD ====
