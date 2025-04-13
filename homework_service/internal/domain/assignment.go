@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 )
 
@@ -33,4 +34,10 @@ type AssignmentFilter struct {
 	Statuses    []AssignmentStatus
 	OnlyActive  bool
 	OnlyOverdue bool
+}
+
+type AssignmentRepository interface {
+	Create(ctx context.Context, assignment *Assignment) error
+	GetByID(ctx context.Context, id string) (*Assignment, error)
+	ListByTutorID(ctx context.Context, tutorID string) ([]*Assignment, error)
 }

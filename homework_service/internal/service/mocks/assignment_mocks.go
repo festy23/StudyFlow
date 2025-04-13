@@ -8,6 +8,30 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+type UserClient interface {
+	UserExists(ctx context.Context, userID string) bool
+	IsPair(ctx context.Context, tutorID, studentID string) bool
+}
+
+type FileClient interface {
+	FileExists(ctx context.Context, fileID string) bool
+}
+
+type MockAssignmentRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockAssignmentRepositoryMockRecorder
+}
+
+type MockAssignmentRepositoryMockRecorder struct {
+	mock *MockAssignmentRepository
+}
+
+func NewMockAssignmentRepository(ctrl *gomock.Controller) *MockAssignmentRepository {
+	mock := &MockAssignmentRepository{ctrl: ctrl}
+	mock.recorder = &MockAssignmentRepositoryMockRecorder{mock}
+	return mock
+}
+
 type MockAssignmentService struct {
 	ctrl     *gomock.Controller
 	recorder *MockAssignmentServiceMockRecorder
