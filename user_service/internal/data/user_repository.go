@@ -28,11 +28,11 @@ func (r *UserRepository) NewUserCreationRepositoryTx(ctx context.Context) (servi
 
 func (r *UserRepository) GetUser(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	query := `
-SELECT (
+SELECT 
 	id, role, auth_provider, status,
 	first_name, last_name, timezone,
 	created_at, edited_at
-)
+
 FROM users
 WHERE id = $1
 `
@@ -57,12 +57,12 @@ func (r *UserRepository) UpdateUser(ctx context.Context, id uuid.UUID, input *mo
 
 func (r *UserRepository) GetTutorProfile(ctx context.Context, userId uuid.UUID) (*model.TutorProfile, error) {
 	query := `
-SELECT (
+SELECT 
 	id, user_id, payment_info, 
 	lesson_price_rub, lesson_connection_link, 
 	created_at, edited_at 
-)
-FROM users
+
+FROM tutor_profiles
 WHERE user_id = $1
 `
 
@@ -89,7 +89,7 @@ func (r *UserRepository) UpdateTutorProfile(ctx context.Context, userId uuid.UUI
 
 func (r *UserRepository) GetTelegramAccount(ctx context.Context, userId uuid.UUID) (*model.TelegramAccount, error) {
 	query := `
-SELECT (id, user_id, telegram_id, username, created_at)
+SELECT id, user_id, telegram_id, username, created_at
 FROM telegram_accounts
 WHERE user_id = $1
 `
@@ -103,7 +103,7 @@ WHERE user_id = $1
 
 func (r *UserRepository) GetTelegramAccountByTelegramId(ctx context.Context, telegramId int64) (*model.TelegramAccount, error) {
 	query := `
-SELECT (id, user_id, telegram_id, username, created_at)
+SELECT id, user_id, telegram_id, username, created_at
 FROM telegram_accounts
 WHERE telegram_id = $1
 `

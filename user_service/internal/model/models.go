@@ -62,10 +62,10 @@ type User struct {
 }
 
 type TelegramAccount struct {
-	id         uuid.UUID `db:"id"`
+	Id         uuid.UUID `db:"id"`
 	UserId     uuid.UUID `db:"user_id"`
 	TelegramId int64     `db:"telegram_id"`
-	Username   *string   `db:"user_name"`
+	Username   *string   `db:"username"`
 	CreatedAt  time.Time `db:"created_at"`
 }
 

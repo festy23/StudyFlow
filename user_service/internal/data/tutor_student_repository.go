@@ -58,11 +58,11 @@ func (r *TutorStudentRepository) UpdateTutorStudent(ctx context.Context, tutorId
 
 func (r *TutorStudentRepository) GetTutorStudent(ctx context.Context, tutorId uuid.UUID, studentId uuid.UUID) (*model.TutorStudent, error) {
 	query := `
-SELECT (
-	id, user_id, payment_info, 
+SELECT 
+	id, tutor_id, student_id, 
 	lesson_price_rub, lesson_connection_link,
-	created_at, edited_at
-)
+	status, created_at, edited_at
+
 FROM tutor_students
 WHERE tutor_id = $1 AND student_id = $2
 `

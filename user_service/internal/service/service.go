@@ -241,7 +241,7 @@ func (s *UserService) UpdateTutorProfile(ctx context.Context, userId uuid.UUID, 
 }
 
 func (s *UserService) CreateTutorStudent(ctx context.Context, input *model.CreateTutorStudentInput) (*model.TutorStudent, error) {
-	if err := ensureCurrentUserIs(ctx, input.StudentId); err != nil {
+	if err := ensureCurrentUserIs(ctx, input.TutorId); err != nil {
 		return nil, err
 	}
 
@@ -260,6 +260,7 @@ func (s *UserService) CreateTutorStudent(ctx context.Context, input *model.Creat
 		StudentId:            input.StudentId,
 		LessonPriceRub:       input.LessonPriceRub,
 		LessonConnectionLink: input.LessonConnectionLink,
+		Status:               model.TutorStudentStatusInvited,
 	}
 	ts, err := s.tsRepository.CreateTutorStudent(ctx, tsInput)
 	if err != nil {

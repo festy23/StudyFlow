@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"common_library/logging"
 	"context"
 	"errors"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -43,14 +45,18 @@ func NewUserServiceServer(userService UserService) *UserServiceServer {
 func (h *UserServiceServer) RegisterViaTelegram(ctx context.Context, req *pb.RegisterViaTelegramRequest) (*pb.User, error) {
 	input := &model.RegisterViaTelegramInput{
 		TelegramId: req.TelegramId,
+		Role:       model.Role(req.Role),
 		Username:   req.Username,
 		FirstName:  req.FirstName,
 		LastName:   req.LastName,
 		Timezone:   req.Timezone,
 	}
+	if logger, ok := logging.GetFromContext(ctx); ok {
+		logger.Info(ctx, "registering user", zap.Any("input", input))
+	}
 	user, err := h.service.RegisterViaTelegram(ctx, input)
 	if err != nil {
-		return nil, mapError(err, errdefs.ErrAlreadyExists)
+		return nil, mapError(err, errdefs.ErrAlreadyExists, errdefs.ValidationErr)
 	}
 
 	return toPbUser(user), nil
@@ -358,6 +364,7 @@ func toPbTutorStudent(userStudent *model.TutorStudent) *pb.TutorStudent {
 		Id:                   userStudent.Id.String(),
 		TutorId:              userStudent.TutorId.String(),
 		StudentId:            userStudent.StudentId.String(),
+		Status:               userStudent.Status.String(),
 		LessonPriceRub:       userStudent.LessonPriceRub,
 		LessonConnectionLink: userStudent.LessonConnectionLink,
 		CreatedAt:            timestamppb.New(userStudent.CreatedAt),

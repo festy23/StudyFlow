@@ -1,10 +1,11 @@
-package server
+package main
 
 import (
 	"common_library/logging"
 	"common_library/metadata"
 	"context"
 	"fmt"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
@@ -54,8 +55,10 @@ func main() {
 	}
 
 	server := grpc.NewServer(
-		grpc.UnaryInterceptor(metadata.NewMetadataUnaryInterceptor()),
-		grpc.UnaryInterceptor(logging.NewUnaryLoggingInterceptor(logger)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			metadata.NewMetadataUnaryInterceptor(),
+			logging.NewUnaryLoggingInterceptor(logger),
+		)),
 	)
 
 	pb.RegisterUserServiceServer(server, userHandler)

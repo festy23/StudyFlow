@@ -10,7 +10,7 @@ import (
 func buildUserUpdateQuery(input *model.UpdateUserInput) (string, []any) {
 	var set []string
 	var args []any
-	argIdx := 2
+	argIdx := 1
 
 	if input.FirstName != nil {
 		set = append(set, fmt.Sprintf("first_name = $%d", argIdx))
@@ -33,7 +33,11 @@ func buildUserUpdateQuery(input *model.UpdateUserInput) (string, []any) {
 UPDATE users 
 SET %s 
 WHERE id = $%d 
-RETURNING id, first_name, last_name, timezone, created_at, edited_at
+RETURNING
+	id, role, auth_provider, status,
+	first_name, last_name, timezone,
+	created_at, edited_at
+
 `,
 		strings.Join(set, ", "),
 		argIdx,
@@ -44,7 +48,7 @@ RETURNING id, first_name, last_name, timezone, created_at, edited_at
 func buildTutorProfileUpdateQuery(input *model.UpdateTutorProfileInput) (string, []any) {
 	var set []string
 	var args []any
-	argIdx := 2
+	argIdx := 1
 
 	if input.PaymentInfo != nil {
 		set = append(set, fmt.Sprintf("payment_info = $%d", argIdx))
@@ -125,7 +129,10 @@ func buildListTutorStudentsQuery(tutorID uuid.UUID, studentID uuid.UUID) (string
 	}
 
 	query := `
-SELECT tutor_id, student_id, lesson_price_rub, lesson_connection_link, status, created_at, edited_at
+SELECT 
+    id, tutor_id, student_id, lesson_price_rub, 
+    lesson_connection_link, status, 
+    created_at, edited_at
 FROM tutor_students
 `
 	if len(where) > 0 {
