@@ -4,10 +4,12 @@ go 1.24.0
 
 require (
 	common_library v0.0.0-00010101000000-000000000000
+	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.7.4
+	github.com/jmoiron/sqlx v1.4.0
 	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )

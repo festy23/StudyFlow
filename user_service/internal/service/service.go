@@ -2,8 +2,11 @@ package service
 
 import (
 	"common_library/ctxdata"
+	"common_library/logging"
 	"context"
+	"fmt"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"slices"
 	"strings"
 	"userservice/internal/authorization"
@@ -12,18 +15,24 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, input *model.RepositoryCreateUserInput) (*model.User, error)
+	NewUserCreationRepositoryTx(ctx context.Context) (UserCreationRepositoryTx, error)
+
 	GetUser(ctx context.Context, id uuid.UUID) (*model.User, error)
 	UpdateUser(ctx context.Context, id uuid.UUID, input *model.UpdateUserInput) (*model.User, error)
 
-	CreateTutorProfile(ctx context.Context, input *model.RepositoryCreateTutorProfileInput) (*model.TutorProfile, error)
 	GetTutorProfile(ctx context.Context, userId uuid.UUID) (*model.TutorProfile, error)
 	UpdateTutorProfile(ctx context.Context, userId uuid.UUID, input *model.UpdateTutorProfileInput) (*model.TutorProfile, error)
 
-	CreateTelegramAccount(ctx context.Context, input *model.RepositoryCreateTelegramAccountInput) (*model.TelegramAccount, error)
 	GetTelegramAccount(ctx context.Context, userId uuid.UUID) (*model.TelegramAccount, error)
 	GetTelegramAccountByTelegramId(ctx context.Context, telegramId int64) (*model.TelegramAccount, error)
-	ExistsByTelegramID(ctx context.Context, telegramID int64) (bool, error)
+}
+
+type UserCreationRepositoryTx interface {
+	CreateUser(ctx context.Context, input *model.RepositoryCreateUserInput) (*model.User, error)
+	CreateTutorProfile(ctx context.Context, input *model.RepositoryCreateTutorProfileInput) (*model.TutorProfile, error)
+	CreateTelegramAccount(ctx context.Context, input *model.RepositoryCreateTelegramAccountInput) (*model.TelegramAccount, error)
+	Commit(ctx context.Context) error
+	Rollback(ctx context.Context) error
 }
 
 type TutorStudentsRepository interface {
@@ -54,6 +63,21 @@ func (s *UserService) RegisterViaTelegram(ctx context.Context, input *model.Regi
 		return nil, errdefs.ValidationErr
 	}
 
+	repo, err := s.userRepository.NewUserCreationRepositoryTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(repo UserCreationRepositoryTx, ctx context.Context) {
+		err := repo.Rollback(ctx)
+		if err != nil {
+			logger, ok := logging.GetFromContext(ctx)
+			if ok {
+				logger.Error(ctx, fmt.Sprintf("Failed to Rollback"), zap.Error(err))
+			}
+		}
+	}(repo, ctx)
+
 	id, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
@@ -69,7 +93,7 @@ func (s *UserService) RegisterViaTelegram(ctx context.Context, input *model.Regi
 		Timezone:     input.Timezone,
 	}
 
-	user, err := s.userRepository.CreateUser(ctx, userInput)
+	user, err := repo.CreateUser(ctx, userInput)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +110,7 @@ func (s *UserService) RegisterViaTelegram(ctx context.Context, input *model.Regi
 		Username:   input.Username,
 	}
 
-	_, err = s.userRepository.CreateTelegramAccount(ctx, tgAccountInput)
+	_, err = repo.CreateTelegramAccount(ctx, tgAccountInput)
 	if err != nil {
 		return nil, err
 	}
@@ -101,11 +125,17 @@ func (s *UserService) RegisterViaTelegram(ctx context.Context, input *model.Regi
 			UserId: user.Id,
 		}
 
-		_, err := s.userRepository.CreateTutorProfile(ctx, tutorProfileInput)
+		_, err := repo.CreateTutorProfile(ctx, tutorProfileInput)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	err = repo.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
