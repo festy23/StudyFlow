@@ -9,7 +9,7 @@ type Feedback struct {
 	ID           string
 	SubmissionID string
 	FileID       *string
-	Comment      *string
+	Comment      string
 	CreatedAt    time.Time
 	EditedAt     time.Time
 }

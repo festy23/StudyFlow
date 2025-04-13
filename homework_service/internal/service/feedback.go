@@ -124,7 +124,7 @@ func (s *FeedbackService) UpdateFeedback(ctx context.Context, feedback *domain.F
 		existingFeedback.FileID = feedback.FileID
 	}
 
-	if feedback.Comment != nil {
+	if feedback.Comment != "nothing" {
 		existingFeedback.Comment = feedback.Comment
 	}
 
