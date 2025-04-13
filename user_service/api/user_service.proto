@@ -14,7 +14,7 @@ service UserService {
 	rpc GetUser(GetUserRequest) returns (UserPublic);
 	rpc UpdateUser(UpdateUserRequest) returns (User);
 
-	rpc UpdateTutorProfile(TutorProfile) returns (TutorProfile);
+	rpc UpdateTutorProfile(UpdateTutorProfileRequest) returns (TutorProfile);
 	rpc GetTutorProfileByUserId(GetTutorProfileByUserIdRequest) returns (TutorProfile);
 
 	rpc GetTutorStudent(GetTutorStudentRequest) returns (TutorStudent);

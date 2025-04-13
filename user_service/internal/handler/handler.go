@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"slices"
 	"userservice/internal/errdefs"
@@ -70,7 +69,7 @@ func (h *UserServiceServer) AuthorizeByAuthHeader(ctx context.Context, req *pb.A
 	return toPbUser(user), nil
 }
 
-func (h *UserServiceServer) GetMe(ctx context.Context) (*pb.User, error) {
+func (h *UserServiceServer) GetMe(ctx context.Context, _ *pb.Empty) (*pb.User, error) {
 	user, err := h.service.GetMe(ctx)
 
 	if err != nil {
@@ -231,7 +230,7 @@ func (h *UserServiceServer) UpdateTutorStudent(ctx context.Context, req *pb.Upda
 	return toPbTutorStudent(tutorStudent), nil
 }
 
-func (h *UserServiceServer) DeleteTutorStudent(ctx context.Context, req *pb.DeleteTutorStudentRequest) (*emptypb.Empty, error) {
+func (h *UserServiceServer) DeleteTutorStudent(ctx context.Context, req *pb.DeleteTutorStudentRequest) (*pb.Empty, error) {
 	tutorId, err := uuid.Parse(req.TutorId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -247,7 +246,7 @@ func (h *UserServiceServer) DeleteTutorStudent(ctx context.Context, req *pb.Dele
 		return nil, mapError(err, errdefs.ErrNotFound, errdefs.ErrPermissionDenied)
 	}
 
-	return &emptypb.Empty{}, nil
+	return &pb.Empty{}, nil
 }
 
 func (h *UserServiceServer) ListTutorStudents(ctx context.Context, req *pb.ListTutorStudentsRequest) (*pb.ListTutorStudentsResponse, error) {

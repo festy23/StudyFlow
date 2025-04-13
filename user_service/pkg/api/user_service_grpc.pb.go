@@ -45,7 +45,7 @@ type UserServiceClient interface {
 	GetMe(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*User, error)
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserPublic, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*User, error)
-	UpdateTutorProfile(ctx context.Context, in *TutorProfile, opts ...grpc.CallOption) (*TutorProfile, error)
+	UpdateTutorProfile(ctx context.Context, in *UpdateTutorProfileRequest, opts ...grpc.CallOption) (*TutorProfile, error)
 	GetTutorProfileByUserId(ctx context.Context, in *GetTutorProfileByUserIdRequest, opts ...grpc.CallOption) (*TutorProfile, error)
 	GetTutorStudent(ctx context.Context, in *GetTutorStudentRequest, opts ...grpc.CallOption) (*TutorStudent, error)
 	CreateTutorStudent(ctx context.Context, in *CreateTutorStudentRequest, opts ...grpc.CallOption) (*TutorStudent, error)
@@ -115,7 +115,7 @@ func (c *userServiceClient) UpdateUser(ctx context.Context, in *UpdateUserReques
 	return out, nil
 }
 
-func (c *userServiceClient) UpdateTutorProfile(ctx context.Context, in *TutorProfile, opts ...grpc.CallOption) (*TutorProfile, error) {
+func (c *userServiceClient) UpdateTutorProfile(ctx context.Context, in *UpdateTutorProfileRequest, opts ...grpc.CallOption) (*TutorProfile, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TutorProfile)
 	err := c.cc.Invoke(ctx, UserService_UpdateTutorProfile_FullMethodName, in, out, cOpts...)
@@ -224,7 +224,7 @@ type UserServiceServer interface {
 	GetMe(context.Context, *Empty) (*User, error)
 	GetUser(context.Context, *GetUserRequest) (*UserPublic, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*User, error)
-	UpdateTutorProfile(context.Context, *TutorProfile) (*TutorProfile, error)
+	UpdateTutorProfile(context.Context, *UpdateTutorProfileRequest) (*TutorProfile, error)
 	GetTutorProfileByUserId(context.Context, *GetTutorProfileByUserIdRequest) (*TutorProfile, error)
 	GetTutorStudent(context.Context, *GetTutorStudentRequest) (*TutorStudent, error)
 	CreateTutorStudent(context.Context, *CreateTutorStudentRequest) (*TutorStudent, error)
@@ -259,7 +259,7 @@ func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserRequest) 
 func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
-func (UnimplementedUserServiceServer) UpdateTutorProfile(context.Context, *TutorProfile) (*TutorProfile, error) {
+func (UnimplementedUserServiceServer) UpdateTutorProfile(context.Context, *UpdateTutorProfileRequest) (*TutorProfile, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTutorProfile not implemented")
 }
 func (UnimplementedUserServiceServer) GetTutorProfileByUserId(context.Context, *GetTutorProfileByUserIdRequest) (*TutorProfile, error) {
@@ -401,7 +401,7 @@ func _UserService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _UserService_UpdateTutorProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TutorProfile)
+	in := new(UpdateTutorProfileRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -413,7 +413,7 @@ func _UserService_UpdateTutorProfile_Handler(srv interface{}, ctx context.Contex
 		FullMethod: UserService_UpdateTutorProfile_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UpdateTutorProfile(ctx, req.(*TutorProfile))
+		return srv.(UserServiceServer).UpdateTutorProfile(ctx, req.(*UpdateTutorProfileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

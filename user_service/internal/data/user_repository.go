@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"userservice/internal/model"
+	"userservice/internal/service"
 )
 
 type UserRepository struct {
@@ -17,12 +18,12 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) NewUserCreationRepositoryTx(ctx context.Context) (UserCreationRepositoryTxInterface, error) {
+func (r *UserRepository) NewUserCreationRepositoryTx(ctx context.Context) (service.UserCreationRepositoryTx, error) {
 	tx, err := r.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return &UserCreationRepositoryTx{tx: tx}, nil
+	return &UserCreationRepository{tx: tx}, nil
 }
 
 func (r *UserRepository) GetUser(ctx context.Context, id uuid.UUID) (*model.User, error) {
@@ -122,11 +123,11 @@ type UserCreationRepositoryTxInterface interface {
 	Rollback(ctx context.Context) error
 }
 
-type UserCreationRepositoryTx struct {
+type UserCreationRepository struct {
 	tx pgx.Tx
 }
 
-func (r *UserCreationRepositoryTx) CreateUser(ctx context.Context, input *model.RepositoryCreateUserInput) (*model.User, error) {
+func (r *UserCreationRepository) CreateUser(ctx context.Context, input *model.RepositoryCreateUserInput) (*model.User, error) {
 	query := `
 INSERT INTO users (
 	id, role, auth_provider, status,
@@ -156,7 +157,7 @@ RETURNING
 	return &user, nil
 }
 
-func (r *UserCreationRepositoryTx) CreateTutorProfile(ctx context.Context, input *model.RepositoryCreateTutorProfileInput) (*model.TutorProfile, error) {
+func (r *UserCreationRepository) CreateTutorProfile(ctx context.Context, input *model.RepositoryCreateTutorProfileInput) (*model.TutorProfile, error) {
 	query := `
 INSERT INTO tutor_profiles (
 	id, user_id, payment_info, 
@@ -184,7 +185,7 @@ RETURNING
 	return &profile, nil
 }
 
-func (r *UserCreationRepositoryTx) CreateTelegramAccount(ctx context.Context, input *model.RepositoryCreateTelegramAccountInput) (*model.TelegramAccount, error) {
+func (r *UserCreationRepository) CreateTelegramAccount(ctx context.Context, input *model.RepositoryCreateTelegramAccountInput) (*model.TelegramAccount, error) {
 	query := `
 INSERT INTO telegram_accounts (id, user_id, telegram_id, username)
 VALUES ($1, $2, $3, $4)
@@ -204,12 +205,12 @@ RETURNING id, user_id, telegram_id, username, created_at
 	return &account, nil
 }
 
-func (r *UserCreationRepositoryTx) Commit(ctx context.Context) error {
+func (r *UserCreationRepository) Commit(ctx context.Context) error {
 	err := r.tx.Commit(ctx)
 	return err
 }
 
-func (r *UserCreationRepositoryTx) Rollback(ctx context.Context) error {
+func (r *UserCreationRepository) Rollback(ctx context.Context) error {
 	err := r.tx.Rollback(ctx)
 	return err
 }

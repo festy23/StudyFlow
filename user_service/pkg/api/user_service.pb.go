@@ -1509,15 +1509,15 @@ const file_user_service_proto_rawDesc = "" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x127\n" +
 	"\tedited_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\beditedAtB\x13\n" +
 	"\x11_lesson_price_rubB\x19\n" +
-	"\x17_lesson_connection_link2\xa0\t\n" +
+	"\x17_lesson_connection_link2\xad\t\n" +
 	"\vUserService\x12I\n" +
 	"\x13RegisterViaTelegram\x12#.user.v1.RegisterViaTelegramRequest\x1a\r.user.v1.User\x12M\n" +
 	"\x15AuthorizeByAuthHeader\x12%.user.v1.AuthorizeByAuthHeaderRequest\x1a\r.user.v1.User\x12&\n" +
 	"\x05GetMe\x12\x0e.user.v1.Empty\x1a\r.user.v1.User\x127\n" +
 	"\aGetUser\x12\x17.user.v1.GetUserRequest\x1a\x13.user.v1.UserPublic\x127\n" +
 	"\n" +
-	"UpdateUser\x12\x1a.user.v1.UpdateUserRequest\x1a\r.user.v1.User\x12B\n" +
-	"\x12UpdateTutorProfile\x12\x15.user.v1.TutorProfile\x1a\x15.user.v1.TutorProfile\x12Y\n" +
+	"UpdateUser\x12\x1a.user.v1.UpdateUserRequest\x1a\r.user.v1.User\x12O\n" +
+	"\x12UpdateTutorProfile\x12\".user.v1.UpdateTutorProfileRequest\x1a\x15.user.v1.TutorProfile\x12Y\n" +
 	"\x17GetTutorProfileByUserId\x12'.user.v1.GetTutorProfileByUserIdRequest\x1a\x15.user.v1.TutorProfile\x12I\n" +
 	"\x0fGetTutorStudent\x12\x1f.user.v1.GetTutorStudentRequest\x1a\x15.user.v1.TutorStudent\x12O\n" +
 	"\x12CreateTutorStudent\x12\".user.v1.CreateTutorStudentRequest\x1a\x15.user.v1.TutorStudent\x12O\n" +
@@ -1580,7 +1580,7 @@ var file_user_service_proto_depIdxs = []int32{
 	17, // 10: user.v1.UserService.GetMe:input_type -> user.v1.Empty
 	2,  // 11: user.v1.UserService.GetUser:input_type -> user.v1.GetUserRequest
 	3,  // 12: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
-	20, // 13: user.v1.UserService.UpdateTutorProfile:input_type -> user.v1.TutorProfile
+	5,  // 13: user.v1.UserService.UpdateTutorProfile:input_type -> user.v1.UpdateTutorProfileRequest
 	4,  // 14: user.v1.UserService.GetTutorProfileByUserId:input_type -> user.v1.GetTutorProfileByUserIdRequest
 	6,  // 15: user.v1.UserService.GetTutorStudent:input_type -> user.v1.GetTutorStudentRequest
 	7,  // 16: user.v1.UserService.CreateTutorStudent:input_type -> user.v1.CreateTutorStudentRequest
