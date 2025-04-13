@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package user.v1;
 
+option go_package = "pkg/api";
+
 import "google/protobuf/timestamp.proto";
 
 service UserService {
@@ -12,7 +14,7 @@ service UserService {
 	rpc GetUser(GetUserRequest) returns (UserPublic);
 	rpc UpdateUser(UpdateUserRequest) returns (User);
 
-	rpc UpdateTutorProfile(TutorProfile) returns (TutorProfile);
+	rpc UpdateTutorProfile(UpdateTutorProfileRequest) returns (TutorProfile);
 	rpc GetTutorProfileByUserId(GetTutorProfileByUserIdRequest) returns (TutorProfile);
 
 	rpc GetTutorStudent(GetTutorStudentRequest) returns (TutorStudent);
@@ -24,16 +26,18 @@ service UserService {
 	rpc ListTutorsForStudent(ListTutorsForStudentRequest) returns (ListTutorsForStudentResponse);
 
 	rpc ResolveTutorStudentContext(ResolveTutorStudentContextRequest) returns (ResolvedTutorStudentContext);
+	rpc AcceptInvitationFromTutor(AcceptInvitationFromTutorRequest) returns (Empty);
 }
 
 // ==== REQUESTS ====
 
 message RegisterViaTelegramRequest {
-	string telegram_id = 1;
-	string username = 2;
-	string first_name = 3;
-	string last_name = 4;
-	string timezone = 5;
+	int64 telegram_id = 1;
+	string role = 2;
+	optional string username = 3;
+	optional string first_name = 4;
+	optional string last_name = 5;
+	optional string timezone = 6;
 }
 
 message AuthorizeByAuthHeaderRequest {
@@ -45,13 +49,21 @@ message GetUserRequest {
 }
 
 message UpdateUserRequest {
-	string first_name = 1;
-	string last_name = 2;
-	string timezone = 3;
+	string id = 1;
+	optional string first_name = 2;
+	optional string last_name = 3;
+	optional string timezone = 4;
 }
 
 message GetTutorProfileByUserIdRequest {
 	string user_id = 1;
+}
+
+message UpdateTutorProfileRequest {
+	string user_id = 1;
+	optional string payment_info = 2;
+	optional int32 lesson_price_rub = 3;
+	optional string lesson_connection_link = 4;
 }
 
 message GetTutorStudentRequest {
@@ -62,16 +74,16 @@ message GetTutorStudentRequest {
 message CreateTutorStudentRequest {
 	string tutor_id = 1;
 	string student_id = 2;
-	int32 lesson_price_rub = 3;
-	string lesson_connection_link = 4;
+	optional int32 lesson_price_rub = 3;
+	optional string lesson_connection_link = 4;
 }
 
 message UpdateTutorStudentRequest {
 	string tutor_id = 1;
 	string student_id = 2;
-	int32 lesson_price_rub = 3;
-	string lesson_connection_link = 4;
-	string status = 5;
+	optional int32 lesson_price_rub = 3;
+	optional string lesson_connection_link = 4;
+	optional string status = 5;
 }
 
 message DeleteTutorStudentRequest {
@@ -101,12 +113,15 @@ message ResolveTutorStudentContextRequest {
 }
 
 message ResolvedTutorStudentContext {
-	bool relationship_exists = 1;
 	string relationship_status = 2; // invited / active / blocked / removed
 
-	int32 lesson_price_rub = 3;
-	string lesson_connection_link = 4;
-	string payment_info = 5;
+	optional int32 lesson_price_rub = 3;
+	optional string lesson_connection_link = 4;
+	optional string payment_info = 5;
+}
+
+message AcceptInvitationFromTutorRequest {
+	string tutor_id = 1;
 }
 
 message Empty {}
@@ -118,9 +133,9 @@ message User {
 	string role = 2; // tutor / student
 	string auth_provider = 3;
 	string status = 4; // active / blocked / deleted
-	string first_name = 5;
-	string last_name = 6;
-	string timezone = 7;
+	optional string first_name = 5;
+	optional string last_name = 6;
+	optional string timezone = 7;
 	google.protobuf.Timestamp created_at = 8;
 	google.protobuf.Timestamp edited_at = 9;
 }
@@ -128,16 +143,16 @@ message User {
 message UserPublic {
 	string id = 1;
 	string role = 2;
-	string first_name = 3;
-	string last_name = 4;
+	optional string first_name = 3;
+	optional string last_name = 4;
 }
 
 message TutorProfile {
 	string id = 1;
 	string user_id = 2;
-	string payment_info = 3;
-	int32 lesson_price_rub = 4;
-	string lesson_connection_link = 5;
+	optional string payment_info = 3;
+	optional int32 lesson_price_rub = 4;
+	optional string lesson_connection_link = 5;
 	google.protobuf.Timestamp created_at = 6;
 	google.protobuf.Timestamp edited_at = 7;
 }
@@ -146,8 +161,8 @@ message TutorStudent {
 	string id = 1;
 	string tutor_id = 2;
 	string student_id = 3;
-	int32 lesson_price_rub = 4;
-	string lesson_connection_link = 5;
+	optional int32 lesson_price_rub = 4;
+	optional string lesson_connection_link = 5;
 	string status = 6; // invited / active / blocked / removed
 	google.protobuf.Timestamp created_at = 7;
 	google.protobuf.Timestamp edited_at = 8;
