@@ -25,7 +25,7 @@ const (
 type InitUploadRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UploadedBy    string                 `protobuf:"bytes,1,opt,name=uploaded_by,json=uploadedBy,proto3" json:"uploaded_by,omitempty"` // user_id
-	FileName      string                 `protobuf:"bytes,2,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`       // имя файла (например: homework.pdf)
+	Filename      string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty"`                       // имя файла (например: homework.pdf)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -67,9 +67,9 @@ func (x *InitUploadRequest) GetUploadedBy() string {
 	return ""
 }
 
-func (x *InitUploadRequest) GetFileName() string {
+func (x *InitUploadRequest) GetFilename() string {
 	if x != nil {
-		return x.FileName
+		return x.Filename
 	}
 	return ""
 }
@@ -269,9 +269,10 @@ func (x *GetFileMetaRequest) GetFileId() string {
 type File struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UploadedBy    string                 `protobuf:"bytes,2,opt,name=uploaded_by,json=uploadedBy,proto3" json:"uploaded_by,omitempty"`
-	FileName      string                 `protobuf:"bytes,3,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Extension     string                 `protobuf:"bytes,2,opt,name=extension,proto3" json:"extension,omitempty"`
+	UploadedBy    string                 `protobuf:"bytes,3,opt,name=uploaded_by,json=uploadedBy,proto3" json:"uploaded_by,omitempty"`
+	Filename      *string                `protobuf:"bytes,4,opt,name=filename,proto3,oneof" json:"filename,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -313,6 +314,13 @@ func (x *File) GetId() string {
 	return ""
 }
 
+func (x *File) GetExtension() string {
+	if x != nil {
+		return x.Extension
+	}
+	return ""
+}
+
 func (x *File) GetUploadedBy() string {
 	if x != nil {
 		return x.UploadedBy
@@ -320,9 +328,9 @@ func (x *File) GetUploadedBy() string {
 	return ""
 }
 
-func (x *File) GetFileName() string {
-	if x != nil {
-		return x.FileName
+func (x *File) GetFilename() string {
+	if x != nil && x.Filename != nil {
+		return *x.Filename
 	}
 	return ""
 }
@@ -338,11 +346,11 @@ var File_file_service_proto protoreflect.FileDescriptor
 
 const file_file_service_proto_rawDesc = "" +
 	"\n" +
-	"\x12file_service.proto\x12\afile.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"Q\n" +
+	"\x12file_service.proto\x12\afile.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"P\n" +
 	"\x11InitUploadRequest\x12\x1f\n" +
 	"\vuploaded_by\x18\x01 \x01(\tR\n" +
-	"uploadedBy\x12\x1b\n" +
-	"\tfile_name\x18\x02 \x01(\tR\bfileName\"d\n" +
+	"uploadedBy\x12\x1a\n" +
+	"\bfilename\x18\x02 \x01(\tR\bfilename\"d\n" +
 	"\x12InitUploadResponse\x12\x17\n" +
 	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x1d\n" +
 	"\n" +
@@ -353,14 +361,16 @@ const file_file_service_proto_rawDesc = "" +
 	"\vDownloadURL\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\"-\n" +
 	"\x12GetFileMetaRequest\x12\x17\n" +
-	"\afile_id\x18\x01 \x01(\tR\x06fileId\"\x8f\x01\n" +
+	"\afile_id\x18\x01 \x01(\tR\x06fileId\"\xbe\x01\n" +
 	"\x04File\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
-	"\vuploaded_by\x18\x02 \x01(\tR\n" +
-	"uploadedBy\x12\x1b\n" +
-	"\tfile_name\x18\x03 \x01(\tR\bfileName\x129\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +
+	"\textension\x18\x02 \x01(\tR\textension\x12\x1f\n" +
+	"\vuploaded_by\x18\x03 \x01(\tR\n" +
+	"uploadedBy\x12\x1f\n" +
+	"\bfilename\x18\x04 \x01(\tH\x00R\bfilename\x88\x01\x01\x129\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt2\xe1\x01\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB\v\n" +
+	"\t_filename2\xe1\x01\n" +
 	"\vFileService\x12E\n" +
 	"\n" +
 	"InitUpload\x12\x1a.file.v1.InitUploadRequest\x1a\x1b.file.v1.InitUploadResponse\x12P\n" +
@@ -409,6 +419,7 @@ func file_file_service_proto_init() {
 	if File_file_service_proto != nil {
 		return
 	}
+	file_file_service_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -21,7 +21,7 @@ service FileService {
 
 message InitUploadRequest {
   string uploaded_by = 1;      // user_id
-  string file_name = 2;        // имя файла (например: homework.pdf)
+  string filename = 2;        // имя файла (например: homework.pdf)
 }
 
 message InitUploadResponse {
@@ -48,7 +48,8 @@ message GetFileMetaRequest {
 
 message File {
   string id = 1;
-  string uploaded_by = 2;
-  string file_name = 3;
-  google.protobuf.Timestamp created_at = 4;
+  string extension = 2;
+  string uploaded_by = 3;
+  optional string filename = 4;
+  google.protobuf.Timestamp created_at = 5;
 }
