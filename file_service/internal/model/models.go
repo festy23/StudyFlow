@@ -6,12 +6,11 @@ import (
 )
 
 type File struct {
-	Id          uuid.UUID `db:"id"`
-	Extension   string    `db:"extension"`
-	UploadedBy  uuid.UUID `db:"uploaded_by"`
-	Filename    *string   `db:"filename"`
-	StoragePath string    `db:"storage_path"`
-	CreatedAt   time.Time `db:"created_at"`
+	Id         uuid.UUID `db:"id"`
+	Extension  string    `db:"extension"`
+	UploadedBy uuid.UUID `db:"uploaded_by"`
+	Filename   *string   `db:"filename"`
+	CreatedAt  time.Time `db:"created_at"`
 }
 
 type InitUpload struct {
