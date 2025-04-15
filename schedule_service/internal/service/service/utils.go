@@ -1,8 +1,12 @@
 package service
 
 import (
+	"common_library/ctxdata"
+	"context"
+	"errors"
 	"schedule_service/internal/database/repo"
 	pb "schedule_service/pkg/api"
+	"time"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -45,6 +49,48 @@ func createListLessonsResponse(lessons []repo.Lesson) *pb.ListLessonsResponse {
 	return &pb.ListLessonsResponse{
 		Lessons: protoLessons,
 	}
+}
+
+func validateTimeRange(start, end time.Time) bool {
+	return start.Before(end)
+}
+
+func ValidateTutorStudentPair(ctx context.Context, tutorID, studentID string) (bool, error) {
+	currentUserID, ok := ctxdata.GetUserID(ctx)
+	if !ok {
+		return false, errors.New("user ID not found in context")
+	}
+
+	currentUserRole, ok := ctxdata.GetUserRole(ctx)
+	if !ok {
+		return false, errors.New("user role not found in context")
+	}
+
+	switch currentUserRole {
+	case "tutor":
+		return currentUserID == tutorID, nil
+	case "student":
+		return currentUserID == studentID, nil
+	default:
+		return false, nil
+	}
+}
+func IsTutor(ctx context.Context, userID string) (bool, error) {
+	currentUserID, ok := ctxdata.GetUserID(ctx)
+	if !ok {
+		return false, errors.New("user ID not found in context")
+	}
+
+	if currentUserID != userID {
+		return false, nil
+	}
+
+	role, ok := ctxdata.GetUserRole(ctx)
+	if !ok {
+		return false, errors.New("user role not found in context")
+	}
+
+	return role == "tutor", nil
 }
 
 // import (
