@@ -61,7 +61,7 @@ message DeleteSlotRequest {
 
 message ListSlotsByTutorRequest {
   string tutor_id = 1;
-  bool only_available = 2; // если true, фильтрует is_booked = false
+  optional bool only_available = 2; // если true, фильтрует is_booked = false
 }
 
 message ListSlotsResponse {
@@ -75,7 +75,7 @@ message Slot {
   google.protobuf.Timestamp ends_at = 4;
   bool is_booked = 5;
   google.protobuf.Timestamp created_at = 6;
-  google.protobuf.Timestamp edited_at = 7;
+  optional google.protobuf.Timestamp edited_at = 7;
 }
 
 // ==== LESSONS ====
@@ -91,9 +91,9 @@ message CreateLessonRequest {
 
 message UpdateLessonRequest {
   string id = 1;
-  string connection_link = 2;
-  int32 price_rub = 3;
-  string payment_info = 4;
+  optional string connection_link = 2;
+  optional int32 price_rub = 3;
+  optional string payment_info = 4;
 }
 
 message CancelLessonRequest {
@@ -102,7 +102,7 @@ message CancelLessonRequest {
 
 message ListLessonsByTutorRequest {
   string tutor_id = 1;
-  repeated LessonStatusFilter status_filter = 2;
+  repeated  LessonStatusFilter status_filter = 2;
 }
 
 message ListLessonsByStudentRequest {
@@ -117,7 +117,7 @@ message ListLessonsByPairRequest {
 }
 
 message ListCompletedUnpaidLessonsRequest {
-  google.protobuf.Timestamp after = 1;  // вернуть только после этой даты (опционально)
+  optional google.protobuf.Timestamp after = 1;  // вернуть только после этой даты (опционально)
 }
 
 
@@ -131,9 +131,9 @@ message Lesson {
   string student_id = 3;
   string status = 4; // booked / cancelled / completed
   bool is_paid = 5;
-  string connection_link = 6;
-  int32 price_rub = 7;
-  string payment_info = 8;
+  optional string connection_link = 6;
+  optional int32 price_rub = 7;
+  optional string payment_info = 8;
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp edited_at = 10;
 }
