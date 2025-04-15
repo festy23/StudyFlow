@@ -77,7 +77,7 @@ func getConfigPath() string {
 	}
 
 	possiblePaths := []string{
-		"configs/config.yaml",
+		"config/config.yaml",
 		"/etc/homework-service/config.yaml",
 		"./config.yaml",
 	}

@@ -5,34 +5,34 @@ import (
 )
 
 type Logger struct {
-	logger *zap.Logger
+	ZapLogger *zap.Logger
 }
 
 func New() *Logger {
 	zapLogger, _ := zap.NewProduction()
-	return &Logger{logger: zapLogger}
+	return &Logger{ZapLogger: zapLogger}
 }
 
 func (l *Logger) Info(msg string, fields ...zap.Field) {
-	l.logger.Info(msg, fields...)
+	l.ZapLogger.Info(msg, fields...)
 }
 
 func (l *Logger) Error(msg string, fields ...zap.Field) {
-	l.logger.Error(msg, fields...)
+	l.ZapLogger.Error(msg, fields...)
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.logger.Sugar().Errorf(format, args...)
+	l.ZapLogger.Sugar().Errorf(format, args...)
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	l.logger.Sugar().Infof(format, args...)
+	l.ZapLogger.Sugar().Infof(format, args...)
 }
 
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	l.logger.Sugar().Fatalf(format, args...)
+	l.ZapLogger.Sugar().Fatalf(format, args...)
 }
 
 func (l *Logger) Sync() error {
-	return l.logger.Sync()
+	return l.ZapLogger.Sync()
 }

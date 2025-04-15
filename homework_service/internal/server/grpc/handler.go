@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"common_library/ctxdata"
 	"context"
 	"errors"
 
@@ -35,7 +36,7 @@ func NewHomeworkHandler(
 }
 
 func (h *HomeworkHandler) CreateAssignment(ctx context.Context, req *v1.CreateAssignmentRequest) (*v1.Assignment, error) {
-	userID, ok := ctx.Value("user_id").(string)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}

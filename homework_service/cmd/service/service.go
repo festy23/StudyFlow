@@ -1,7 +1,11 @@
 package main
 
 import (
+	"common_library/logging"
+	"common_library/metadata"
 	"context"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	configs "homework_service/config"
 	"net"
 	"os"
 	"os/signal"
@@ -27,7 +31,7 @@ type UserClient interface {
 func main() {
 	log := logger.New()
 
-	cfg, err := LoadConfig()
+	cfg, err := configs.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -51,8 +55,8 @@ func main() {
 	submissionRepo := repository.NewSubmissionRepository(pg.DB())
 	feedbackRepo := repository.NewFeedbackRepository(pg.DB())
 
-	userClient := app.NewUserClient(cfg.Services.User)
-	fileClient := app.NewFileClient(cfg.Services.File)
+	userClient := app.NewUserClient(cfg.Services.UserService.Address)
+	fileClient := app.NewFileClient(cfg.Services.FileService.Address)
 
 	assignmentService := service.NewAssignmentService(
 		*assignmentRepo,
@@ -89,7 +93,11 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	grpcServer := grpc.NewServer(grpc.Config{Address: cfg.GRPC.Address}, handler)
+	interceptor := grpc_middleware.ChainUnaryServer(
+		metadata.NewMetadataUnaryInterceptor(),
+		logging.NewUnaryLoggingInterceptor(logging.New(log.ZapLogger)),
+	)
+	grpcServer := grpc.NewServer(grpc.Config{Address: cfg.GRPC.Address}, handler, interceptor)
 
 	listener, err := net.Listen("tcp", cfg.GRPC.Address)
 	if err != nil {
@@ -144,10 +152,10 @@ func LoadConfig() (*Config, error) {
 			SSLMode  string
 		}{
 			Host:     "localhost",
-			Port:     5432,
-			User:     "user",
-			Password: "password",
-			DBName:   "homework",
+			Port:     5434,
+			User:     "postgres",
+			Password: "postgres",
+			DBName:   "postgres",
 			SSLMode:  "disable",
 		},
 		Kafka: struct {
