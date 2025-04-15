@@ -13,7 +13,7 @@ import (
 
 	"homework_service/internal/app"
 	"homework_service/internal/repository"
-	"homework_service/internal/server/grpc"
+	"homework_service/internal/server/homework_grpc"
 	"homework_service/internal/service"
 	"homework_service/pkg/db"
 	"homework_service/pkg/kafka"

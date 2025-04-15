@@ -1,4 +1,4 @@
-# homework-service
+# homework_service
 
 ## Описание
 

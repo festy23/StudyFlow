@@ -25,7 +25,7 @@ func TestHomeworkHandler_CreateAssignment(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockAssignmentService := mocks.NewMockAssignmentService(ctrl)
-	handler := NewHomeworkHandler(mockAssignmentService, nil, nil)
+	handler := NewHomeworkHandler(mockAssignmentService, nil, nil, nil, nil)
 
 	now := time.Now()
 	dueDate := now.Add(24 * time.Hour)

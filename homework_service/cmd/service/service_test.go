@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"homework_service/internal/server/grpc"
+	"homework_service/internal/server/homework_grpc"
 	"homework_service/pkg/logger"
 
 	"github.com/stretchr/testify/assert"
