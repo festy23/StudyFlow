@@ -1,0 +1,1782 @@
+openapi: 3.0.3
+info:
+  title: StudyFlow API
+  version: 1.0.0
+components:
+  schemas:
+    UserRole:
+      type: string
+      enum:
+        - tutor
+        - student
+    UserStatus:
+      type: string
+      enum:
+        - active
+        - deleted
+    TutorStudentStatus:
+      type: string
+      enum:
+        - invited
+        - active
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        auth_provider:
+          type: string
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        first_name:
+          type: string
+        last_name:
+          type: string
+        timezone:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    UserPublic:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        first_name:
+          type: string
+        last_name:
+          type: string
+    TutorProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        payment_info:
+          type: string
+        lesson_price_rub:
+          type: integer
+        lesson_connection_link:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    TutorStudent:
+      type: object
+      properties:
+        id:
+          type: string
+        tutor_id:
+          type: string
+        student_id:
+          type: string
+        lesson_price_rub:
+          type: integer
+        lesson_connection_link:
+          type: string
+        status:
+          $ref: '#/components/schemas/TutorStudentStatus'
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+
+
+    InitUploadResponse:
+      type: object
+      properties:
+        file_id:
+          type: string
+        upload_url:
+          type: string
+        method:
+          type: string
+    FileMeta:
+      type: object
+      properties:
+        id:
+          type: string
+        extension:
+          type: string
+        uploaded_by:
+          type: string
+        filename:
+          type: string
+
+
+
+    Slot:
+      type: object
+      properties:
+        id:
+          type: string
+        tutor_id:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        is_booked:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: string
+        slot_id:
+          type: string
+        student_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/LessonStatus'
+        is_paid:
+          type: boolean
+        connection_link:
+          type: string
+        price_rub:
+          type: integer
+        payment_info:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    LessonStatus:
+      type: string
+      enum:
+        - booked
+        - cancelled
+        - completed
+
+
+    PaymentInfo:
+      type: object
+      properties:
+        lesson_id:
+          type: string
+        price_rub:
+          type: integer
+        payment_info:
+          type: string
+    Receipt:
+      type: object
+      properties:
+        id:
+          type: string
+        lesson_id:
+          type: string
+        file_id:
+          type: string
+        is_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    ReceiptFileURL:
+      type: object
+      properties:
+        url:
+          type: string
+
+
+
+
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+        tutor_id:
+          type: string
+        student_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        file_id:
+          type: string
+        due_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    Submission:
+      type: object
+      properties:
+        id:
+          type: string
+        assignment_id:
+          type: string
+        file_id:
+          type: string
+        comment:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+        submission_id:
+          type: string
+        file_id:
+          type: string
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        edited_at:
+          type: string
+          format: date-time
+    HomeworkFileURL:
+      type: object
+      properties:
+        url:
+          type: string
+    AssignmentStatus:
+      type: string
+      enum:
+        - UNSENT
+        - UNREVIEWED
+        - REVIEWED
+        - OVERDUE
+
+
+
+paths:
+  /users/sign-up/telegram:
+    post:
+      summary: Register user via Telegram
+      operationId: registerViaTelegram
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegram_id:
+                  type: integer
+                  format: int64
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                username:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                timezone:
+                  type: string
+              required:
+                - telegram_id
+                - role
+      responses:
+        '200':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Telegram ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/users/me:
+    get:
+      summary: Get current user info
+      operationId: getMe
+      responses:
+        '200':
+          description: User info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /users/users/{id}:
+    get:
+      summary: Get public user profile
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User public info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update user info
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                timezone:
+                  type: string
+      responses:
+        '200':
+          description: User updated
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/tutor-profiles/{user_id}:
+    get:
+      summary: Get tutor profile by user_id
+      operationId: getTutorProfile
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tutor profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorProfile'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update tutor profile
+      operationId: updateTutorProfile
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_info:
+                  type: string
+                lesson_price_rub:
+                  type: integer
+                lesson_connection_link:
+                  type: string
+      responses:
+        '200':
+          description: Tutor profile updated
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/tutor-students/by-tutor/{tutor_id}:
+    get:
+      summary: List tutor-student relationships by tutor
+      operationId: listTutorStudents
+      parameters:
+        - name: tutor_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TutorStudent'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/tutor-students/by-student/{student_id}:
+    get:
+      summary: List tutor-student relationships by student
+      operationId: listTutorsForStudent
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TutorStudent'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/tutor-students/{tutor_id}/{student_id}:
+    get:
+      summary: Get tutor-student relationship
+      operationId: getTutorStudent
+      parameters:
+        - name: tutor_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Relationship found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorStudent'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update tutor-student relationship
+      operationId: updateTutorStudent
+      parameters:
+        - name: tutor_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lesson_price_rub:
+                  type: integer
+                lesson_connection_link:
+                  type: string
+                status:
+                  $ref: '#/components/schemas/TutorStudentStatus'
+      responses:
+        '200':
+          description: Relationship updated
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete tutor-student relationship
+      operationId: deleteTutorStudent
+      parameters:
+        - name: tutor_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Relationship deleted
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/tutor-students:
+    post:
+      summary: Create tutor-student relationship
+      operationId: createTutorStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tutor_id:
+                  type: string
+                student_id:
+                  type: string
+                lesson_price_rub:
+                  type: integer
+                lesson_connection_link:
+                  type: string
+              required:
+                - tutor_id
+                - student_id
+      responses:
+        '200':
+          description: Relationship created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorStudent'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Relationship already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  # files
+  /files/init-upload:
+    post:
+      summary: Initialize file upload and return signed upload URL
+      operationId: initUpload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uploaded_by:
+                  type: string
+                filename:
+                  type: string
+              required:
+                - uploaded_by
+                - filename
+      responses:
+        '200':
+          description: Upload URL generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitUploadResponse'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /files/{file_id}/meta:
+    get:
+      summary: Get metadata for a file
+      operationId: getFileMeta
+      parameters:
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMeta'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  # schedule
+  /schedule/slots:
+    post:
+      summary: Create a slot
+      operationId: createSlot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tutor_id:
+                  type: string
+                starts_at:
+                  type: string
+                  format: date-time
+                ends_at:
+                  type: string
+                  format: date-time
+              required:
+                - tutor_id
+                - starts_at
+                - ends_at
+      responses:
+        '200':
+          description: Slot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /schedule/slots/{id}:
+    get:
+      summary: Get a slot
+      operationId: getSlot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Slot info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update a slot
+      operationId: updateSlot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                starts_at:
+                  type: string
+                  format: date-time
+                ends_at:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Slot updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: Slot already booked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a slot
+      operationId: deleteSlot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Slot deleted
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: Slot is booked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /schedule/slots/by-tutor/{tutor_id}:
+    get:
+      summary: List slots by tutor
+      operationId: listSlotsByTutor
+      parameters:
+        - name: tutor_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: only_available
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /schedule/lessons:
+    get:
+      summary: List lessons
+      operationId: listLessons
+      parameters:
+        - name: tutor_id
+          in: query
+          schema:
+            type: string
+        - name: student_id
+          in: query
+          schema:
+            type: string
+        - name: status_filter
+          in: query
+          schema:
+            $ref: '#/components/schemas/LessonStatus'
+          explode: true
+          style: form
+      responses:
+        '200':
+          description: List of lessons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lesson'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Invalid combination of query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a lesson
+      operationId: createLesson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                slot_id:
+                  type: string
+                student_id:
+                  type: string
+              required:
+                - slot_id
+                - student_id
+      responses:
+        '200':
+          description: Lesson created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Slot not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Slot already booked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: Tutor and student are not linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /schedule/lessons/{id}:
+    get:
+      summary: Get a lesson
+      operationId: getLesson
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lesson info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update a lesson
+      operationId: updateLesson
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                connection_link:
+                  type: string
+                price_rub:
+                  type: integer
+                payment_info:
+                  type: string
+      responses:
+        '200':
+          description: Lesson updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /schedule/lessons/{id}/cancel:
+    post:
+      summary: Cancel a lesson
+      operationId: cancelLesson
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lesson cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  # payment
+  /payment/info/{lesson_id}:
+    get:
+      summary: Get payment info for a lesson
+      operationId: getPaymentInfo
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentInfo'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payment/receipts:
+    post:
+      summary: Submit a payment receipt
+      operationId: submitPaymentReceipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lesson_id:
+                  type: string
+                file_id:
+                  type: string
+              required:
+                - lesson_id
+                - file_id
+      responses:
+        '200':
+          description: Receipt submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payment/receipts/{id}:
+    get:
+      summary: Get receipt by ID
+      operationId: getReceipt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Receipt found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Receipt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payment/receipts/{id}/verify:
+    post:
+      summary: Verify a payment receipt
+      operationId: verifyReceipt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Receipt verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Receipt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payment/receipts/{id}/file-url:
+    get:
+      summary: Get file URL for a receipt
+      operationId: getReceiptFile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptFileURL'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Receipt or lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  # homework/assigments
+  /homework/assignments:
+    post:
+      summary: Create assignment
+      operationId: createAssignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tutor_id:
+                  type: string
+                student_id:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                file_id:
+                  type: string
+                due_date:
+                  type: string
+                  format: date-time
+              required:
+                - tutor_id
+                - student_id
+                - title
+                - description
+                - file_id
+      responses:
+        '200':
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: Student not found or invalid relationship
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: List assignments by tutor, student, or pair
+      operationId: listAssignments
+      parameters:
+        - name: tutor_id
+          in: query
+          schema:
+            type: string
+        - name: student_id
+          in: query
+          schema:
+            type: string
+        - name: status_filter
+          in: query
+          schema:
+            $ref: '#/components/schemas/AssignmentStatus'
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: List of assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assignment'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /homework/assignments/{id}:
+    patch:
+      summary: Update assignment
+      operationId: updateAssignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                file_id:
+                  type: string
+                due_date:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Assignment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete assignment
+      operationId: deleteAssignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assignment deleted
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /homework/assignments/{assignment_id}/file-url:
+    get:
+      summary: Get assignment file
+      operationId: getAssignmentFile
+      parameters:
+        - name: assignment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeworkFileURL'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /homework/assignments/{assignment_id}/submissions:
+    get:
+      summary: List submissions by assignment
+      operationId: listSubmissionsByAssignment
+      parameters:
+        - name: assignment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Submission'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: Assignment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /homework/assignments/{assignment_id}/feedbacks:
+    get:
+      summary: List feedbacks by assignment
+      operationId: listFeedbacksByAssignment
+      parameters:
+        - name: assignment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of feedbacks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feedback'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /homework/submissions:
+    post:
+      summary: Create submission
+      operationId: createSubmission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignment_id:
+                  type: string
+                file_id:
+                  type: string
+                comment:
+                  type: string
+              required:
+                - assignment_id
+                - file_id
+      responses:
+        '200':
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: Assignment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /homework/submissions/{submission_id}/file-url:
+    get:
+      summary: Get submission file
+      operationId: getSubmissionFile
+      parameters:
+        - name: submission_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeworkFileURL'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /homework/feedbacks:
+    post:
+      summary: Create feedback
+      operationId: createFeedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_id:
+                  type: string
+                file_id:
+                  type: string
+                comment:
+                  type: string
+              required:
+                - submission_id
+                - file_id
+      responses:
+        '200':
+          description: Feedback created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /homework/feedbacks/{submission_id}:
+    patch:
+      summary: Update feedback
+      operationId: updateFeedback
+      parameters:
+        - name: submission_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_id:
+                  type: string
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Feedback updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Feedback not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /homework/feedbacks/{feedback_id}/file-url:
+    get:
+      summary: Get feedback file
+      operationId: getFeedbackFile
+      parameters:
+        - name: feedback_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeworkFileURL'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
