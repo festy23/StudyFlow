@@ -72,12 +72,12 @@ func main() {
 		fileClient,
 	)
 
-	handler := homework_grpc.NewHomeworkHandler(
+	handler := homework_grpc.NewHomeworkServer(
 		*assignmentService,
 		submissionService,
 		feedbackService,
-		fileClient,
-		log,
+		*fileClient,
+		*log,
 	)
 
 	kafkaConfig := kafka.Config{
@@ -118,6 +118,6 @@ func main() {
 	<-quit
 
 	log.Info("Shutting down server...")
-	grpcServer.GracefulStop() // Используем GracefulStop вместо Stop
+	grpcServer.GracefulStop()
 	log.Info("Server stopped")
 }

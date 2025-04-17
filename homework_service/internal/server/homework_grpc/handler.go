@@ -4,22 +4,34 @@ import (
 	"common_library/ctxdata"
 	"context"
 	"errors"
+
 	"go.uber.org/zap"
 
 	"homework_service/internal/domain"
 	"homework_service/internal/repository"
 	"homework_service/internal/service"
 
+	"homework_service/internal/app"
 	v1 "homework_service/pkg/api"
 	"homework_service/pkg/logger"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	pb "homework_service/proto/my_proto"
 )
 
 type FileServiceClient interface {
 	GetFileURL(ctx context.Context, fileID string) (string, error)
+}
+
+type HomeworkServer struct {
+	assignmentService service.AssignmentService
+	submissionService service.SubmissionServiceInterface
+	feedbackService   service.FeedbackServiceInterface
+	fileClient        app.FileClient
+	log               logger.Logger
 }
 
 type HomeworkHandler struct {
@@ -30,6 +42,10 @@ type HomeworkHandler struct {
 	feedbackService   service.FeedbackServiceInterface
 	fileService       FileServiceClient
 	logger            *logger.Logger
+}
+
+func RegisterHomeworkServiceServer(grpcServer *grpc.Server, server pb.HomeworkServiceServer) {
+	pb.RegisterHomeworkServiceServer(grpcServer, server)
 }
 
 func NewHomeworkHandler(
@@ -48,6 +64,21 @@ func NewHomeworkHandler(
 	}
 }
 
+func NewHomeworkServer(
+	assignmentService service.AssignmentService,
+	submissionService service.SubmissionServiceInterface,
+	feedbackService service.FeedbackServiceInterface,
+	fileClient app.FileClient,
+	log logger.Logger,
+) *HomeworkServer {
+	return &HomeworkServer{
+		assignmentService: assignmentService,
+		submissionService: submissionService,
+		feedbackService:   feedbackService,
+		fileClient:        fileClient,
+		log:               log,
+	}
+}
 func (h *HomeworkHandler) CreateAssignment(ctx context.Context, req *v1.CreateAssignmentRequest) (*v1.Assignment, error) {
 	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {

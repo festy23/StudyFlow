@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
-
 	"homework_service/internal/domain"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -30,6 +30,45 @@ type AssignmentRepositoryInterface interface {
 
 func NewAssignmentRepository(db *sql.DB) *AssignmentRepository {
 	return &AssignmentRepository{db: db}
+}
+
+func (r *AssignmentRepository) ListByFilter(ctx context.Context, filter domain.AssignmentFilter) ([]*domain.Assignment, error) {
+	query := "SELECT * FROM assignments WHERE 1=1"
+	var args []interface{}
+
+	if filter.TutorID != "" {
+		query += " AND tutor_id = ?"
+		args = append(args, filter.TutorID)
+	}
+
+	if filter.StudentID != "" {
+		query += " AND student_id = ?"
+		args = append(args, filter.StudentID)
+	}
+
+	if len(filter.Statuses) > 0 {
+		query += " AND status IN (?" + strings.Repeat(",?", len(filter.Statuses)-1) + ")"
+		for _, status := range filter.Statuses {
+			args = append(args, status)
+		}
+	}
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var assignments []*domain.Assignment
+	for rows.Next() {
+		var a domain.Assignment
+		if err := rows.Scan(&a.ID, &a.TutorID, &a.StudentID, &a.Title /* остальные поля */); err != nil {
+			return nil, err
+		}
+		assignments = append(assignments, &a)
+	}
+
+	return assignments, nil
 }
 
 func (r *AssignmentRepository) FindAssignmentsDueSoon(ctx context.Context, duration time.Duration) ([]*domain.Assignment, error) {
