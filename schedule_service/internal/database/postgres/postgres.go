@@ -48,6 +48,8 @@ func (r *PostgresRepository) GetSlot(ctx context.Context, id string) (*repo.Slot
 
 	if editedAt.Valid {
 		slot.EditedAt = &editedAt.Time
+	} else {
+		slot.EditedAt = &slot.CreatedAt
 	}
 
 	return &slot, nil
