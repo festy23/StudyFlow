@@ -22,6 +22,21 @@ type AssignmentServiceInt interface {
 	DeleteAssignment(ctx context.Context, id string) error
 	ListAssignmentsByTutor(ctx context.Context, tutorID string) ([]*domain.Assignment, error)
 	ListAssignmentsByStudent(ctx context.Context, studentID string) ([]*domain.Assignment, error)
+	ListAssignmentsByPair(ctx context.Context, tutorID, studentID string) ([]*domain.Assignment, error)
+	ListByFilter(ctx context.Context, filter domain.AssignmentFilter) ([]*domain.Assignment, error)
+}
+
+func (s *AssignmentService) ListAssignmentsByPair(
+	ctx context.Context,
+	tutorID, studentID string,
+	statuses []domain.AssignmentStatus,
+) ([]*domain.Assignment, error) {
+	filter := domain.AssignmentFilter{
+		TutorID:   tutorID,
+		StudentID: studentID,
+		Statuses:  statuses,
+	}
+	return s.assignmentRepo.ListByFilter(ctx, filter)
 }
 
 func NewAssignmentService(

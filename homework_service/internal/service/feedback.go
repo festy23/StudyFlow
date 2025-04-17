@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"common_library/ctxdata"
 	"homework_service/internal/domain"
 	"homework_service/internal/repository"
 )
@@ -18,7 +19,14 @@ var (
 	ErrInvalidArgument     = errors.New("invalid argument")
 )
 
-type FeedbackService struct {
+type FeedbackServiceInterface interface {
+	CreateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error)
+	GetFeedback(ctx context.Context, id string) (*domain.Feedback, error)
+	UpdateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error)
+	ListFeedbacksByAssignment(ctx context.Context, assignmentID string) ([]*domain.Feedback, error)
+}
+
+type feedbackService struct {
 	feedbackRepo   *repository.FeedbackRepository
 	submissionRepo *repository.SubmissionRepository
 	assignmentRepo *repository.AssignmentRepository
@@ -30,8 +38,8 @@ func NewFeedbackService(
 	submissionRepo *repository.SubmissionRepository,
 	assignmentRepo *repository.AssignmentRepository,
 	fileClient FileClient,
-) *FeedbackService {
-	return &FeedbackService{
+) FeedbackServiceInterface {
+	return &feedbackService{
 		feedbackRepo:   feedbackRepo,
 		submissionRepo: submissionRepo,
 		assignmentRepo: assignmentRepo,
@@ -39,8 +47,8 @@ func NewFeedbackService(
 	}
 }
 
-func (s *FeedbackService) CreateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error) {
-	userRole, ok := ctx.Value("user_role").(string)
+func (s *feedbackService) CreateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error) {
+	userRole, ok := ctxdata.GetUserRole(ctx)
 	if !ok || userRole != "tutor" {
 		return nil, ErrPermissionDenied
 	}
@@ -61,12 +69,14 @@ func (s *FeedbackService) CreateFeedback(ctx context.Context, feedback *domain.F
 		return nil, err
 	}
 
-	userID, ok := ctx.Value("user_id").(string)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok || assignment.TutorID != userID {
 		return nil, ErrPermissionDenied
 	}
 
+	var fileIDPtr *string
 	if feedback.FileID != nil {
+		fileIDPtr = feedback.FileID
 		if !s.fileClient.FileExists(ctx, *feedback.FileID) {
 			return nil, errors.New("file not found")
 		}
@@ -75,7 +85,7 @@ func (s *FeedbackService) CreateFeedback(ctx context.Context, feedback *domain.F
 	now := time.Now()
 	newFeedback := &domain.Feedback{
 		SubmissionID: feedback.SubmissionID,
-		FileID:       feedback.FileID,
+		FileID:       fileIDPtr,
 		Comment:      feedback.Comment,
 		CreatedAt:    now,
 		EditedAt:     now,
@@ -88,8 +98,8 @@ func (s *FeedbackService) CreateFeedback(ctx context.Context, feedback *domain.F
 	return newFeedback, nil
 }
 
-func (s *FeedbackService) UpdateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error) {
-	userRole, ok := ctx.Value("user_role").(string)
+func (s *feedbackService) UpdateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error) {
+	userRole, ok := ctxdata.GetUserRole(ctx)
 	if !ok || userRole != "tutor" {
 		return nil, ErrPermissionDenied
 	}
@@ -112,7 +122,7 @@ func (s *FeedbackService) UpdateFeedback(ctx context.Context, feedback *domain.F
 		return nil, err
 	}
 
-	userID, ok := ctx.Value("user_id").(string)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok || assignment.TutorID != userID {
 		return nil, ErrPermissionDenied
 	}
@@ -121,10 +131,11 @@ func (s *FeedbackService) UpdateFeedback(ctx context.Context, feedback *domain.F
 		if !s.fileClient.FileExists(ctx, *feedback.FileID) {
 			return nil, errors.New("file not found")
 		}
-		existingFeedback.FileID = feedback.FileID
+		fileID := feedback.FileID
+		existingFeedback.FileID = fileID
 	}
 
-	if feedback.Comment != "nothing" {
+	if feedback.Comment != "" {
 		existingFeedback.Comment = feedback.Comment
 	}
 
@@ -137,35 +148,13 @@ func (s *FeedbackService) UpdateFeedback(ctx context.Context, feedback *domain.F
 	return existingFeedback, nil
 }
 
-func (s *FeedbackService) ListFeedbacks(ctx context.Context, filter domain.FeedbackFilter) ([]*domain.Feedback, error) {
-	userID, ok := ctx.Value("user_id").(string)
-	if !ok {
-		return nil, ErrPermissionDenied
-	}
-
-	userRole, ok := ctx.Value("user_role").(string)
-	if !ok {
-		return nil, ErrPermissionDenied
-	}
-
-	if userRole == "student" {
-		filter.StudentID = userID
-	}
-
-	if userRole == "tutor" {
-		filter.TutorID = userID
-	}
-
-	return s.feedbackRepo.ListByFilter(ctx, filter)
-}
-
-func (s *FeedbackService) GetFeedback(ctx context.Context, id string) (*domain.Feedback, error) {
+func (s *feedbackService) GetFeedback(ctx context.Context, id string) (*domain.Feedback, error) {
 	feedback, err := s.feedbackRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	userID, ok := ctx.Value("user_id").(string)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, ErrPermissionDenied
 	}
@@ -180,7 +169,7 @@ func (s *FeedbackService) GetFeedback(ctx context.Context, id string) (*domain.F
 		return nil, err
 	}
 
-	userRole, ok := ctx.Value("user_role").(string)
+	userRole, ok := ctxdata.GetUserRole(ctx)
 	if !ok {
 		return nil, ErrPermissionDenied
 	}
@@ -193,4 +182,33 @@ func (s *FeedbackService) GetFeedback(ctx context.Context, id string) (*domain.F
 	}
 
 	return feedback, nil
+}
+
+func (s *feedbackService) ListFeedbacksByAssignment(ctx context.Context, assignmentID string) ([]*domain.Feedback, error) {
+	userID, ok := ctxdata.GetUserID(ctx)
+	if !ok {
+		return nil, ErrPermissionDenied
+	}
+
+	userRole, ok := ctxdata.GetUserRole(ctx)
+	if !ok {
+		return nil, ErrPermissionDenied
+	}
+
+	assignment, err := s.assignmentRepo.GetByID(ctx, assignmentID)
+	if err != nil {
+		return nil, err
+	}
+
+	if userRole == "tutor" && assignment.TutorID != userID {
+		return nil, ErrPermissionDenied
+	}
+	if userRole == "student" && assignment.StudentID != userID {
+		return nil, ErrPermissionDenied
+	}
+
+	filter := domain.FeedbackFilter{
+		AssignmentID: assignmentID,
+	}
+	return s.feedbackRepo.ListByFilter(ctx, filter)
 }

@@ -3,17 +3,18 @@ package main
 import (
 	"common_library/logging"
 	"common_library/metadata"
-	"context"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	configs "homework_service/config"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"google.golang.org/grpc"
+
 	"homework_service/internal/app"
 	"homework_service/internal/repository"
-	"homework_service/internal/server/homework_grpc"
+	homework_grpc "homework_service/internal/server/homework_grpc"
 	"homework_service/internal/service"
 	"homework_service/pkg/db"
 	"homework_service/pkg/kafka"
@@ -21,12 +22,6 @@ import (
 
 	_ "github.com/lib/pq"
 )
-
-type UserClient interface {
-	UserExists(ctx context.Context, userID string) bool
-	IsPair(ctx context.Context, tutorID, studentID string) bool
-	GetUserRole(ctx context.Context, userID string) (string, error)
-}
 
 func main() {
 	log := logger.New()
@@ -77,10 +72,12 @@ func main() {
 		fileClient,
 	)
 
-	handler := grpc.NewHomeworkHandler(
-		assignmentService,
+	handler := homework_grpc.NewHomeworkHandler(
+		*assignmentService,
 		submissionService,
 		feedbackService,
+		fileClient,
+		log,
 	)
 
 	kafkaConfig := kafka.Config{
@@ -97,7 +94,12 @@ func main() {
 		metadata.NewMetadataUnaryInterceptor(),
 		logging.NewUnaryLoggingInterceptor(logging.New(log.ZapLogger)),
 	)
-	grpcServer := grpc.NewServer(grpc.Config{Address: cfg.GRPC.Address}, handler, interceptor)
+
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor),
+	)
+
+	homework_grpc.RegisterHomeworkServiceServer(grpcServer, handler)
 
 	listener, err := net.Listen("tcp", cfg.GRPC.Address)
 	if err != nil {
@@ -116,64 +118,6 @@ func main() {
 	<-quit
 
 	log.Info("Shutting down server...")
-	grpcServer.Stop()
+	grpcServer.GracefulStop() // Используем GracefulStop вместо Stop
 	log.Info("Server stopped")
-}
-
-type Config struct {
-	DB struct {
-		Host     string
-		Port     int
-		User     string
-		Password string
-		DBName   string
-		SSLMode  string
-	}
-	Kafka struct {
-		Brokers []string
-	}
-	GRPC struct {
-		Address string
-	}
-	Services struct {
-		User string
-		File string
-	}
-}
-
-func LoadConfig() (*Config, error) {
-	return &Config{
-		DB: struct {
-			Host     string
-			Port     int
-			User     string
-			Password string
-			DBName   string
-			SSLMode  string
-		}{
-			Host:     "localhost",
-			Port:     5434,
-			User:     "postgres",
-			Password: "postgres",
-			DBName:   "postgres",
-			SSLMode:  "disable",
-		},
-		Kafka: struct {
-			Brokers []string
-		}{
-			Brokers: []string{"localhost:9092"},
-		},
-		GRPC: struct {
-			Address string
-		}{
-			Address: ":50051",
-		},
-		Services: struct {
-			User string
-			File string
-		}{
-			User: "http://user-service",
-			File: "http://file-service",
-		},
-	}, nil
 }

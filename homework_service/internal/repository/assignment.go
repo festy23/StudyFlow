@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"homework_service/internal/domain"
+
+	"github.com/google/uuid"
 )
 
 type AssignmentRepository struct {
@@ -24,6 +25,7 @@ type AssignmentRepositoryInterface interface {
 	ListByStudentID(ctx context.Context, studentID string) ([]*domain.Assignment, error)
 	Delete(ctx context.Context, id string) error
 	UpdateStatus(ctx context.Context, id, status string) error
+	ListByFilter(ctx context.Context, filter domain.AssignmentFilter) ([]*domain.Assignment, error)
 }
 
 func NewAssignmentRepository(db *sql.DB) *AssignmentRepository {

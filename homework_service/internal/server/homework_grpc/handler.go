@@ -25,17 +25,17 @@ type FileServiceClient interface {
 type HomeworkHandler struct {
 	v1.UnimplementedHomeworkServiceServer
 
-	assignmentService service.AssignmentServiceInt
-	submissionService *service.SubmissionService
-	feedbackService   *service.FeedbackService
+	assignmentService service.AssignmentService
+	submissionService service.SubmissionServiceInterface
+	feedbackService   service.FeedbackServiceInterface
 	fileService       FileServiceClient
 	logger            *logger.Logger
 }
 
 func NewHomeworkHandler(
-	assignmentService service.AssignmentServiceInt,
-	submissionService *service.SubmissionService,
-	feedbackService *service.FeedbackService,
+	assignmentService service.AssignmentService,
+	submissionService service.SubmissionServiceInterface,
+	feedbackService service.FeedbackServiceInterface,
 	fileService FileServiceClient,
 	logger *logger.Logger,
 ) *HomeworkHandler {
@@ -49,13 +49,13 @@ func NewHomeworkHandler(
 }
 
 func (h *HomeworkHandler) CreateAssignment(ctx context.Context, req *v1.CreateAssignmentRequest) (*v1.Assignment, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		h.logger.Error("user id not found in context")
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
 
-	userRole, ok := ctxdata.UserRoleFromContext(ctx)
+	userRole, ok := ctxdata.GetUserRole(ctx)
 	if !ok {
 		h.logger.Error("user role not found in context")
 		return nil, status.Error(codes.Unauthenticated, "user role not found")
@@ -105,7 +105,7 @@ func (h *HomeworkHandler) CreateAssignment(ctx context.Context, req *v1.CreateAs
 }
 
 func (h *HomeworkHandler) UpdateAssignment(ctx context.Context, req *v1.UpdateAssignmentRequest) (*v1.Assignment, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -119,35 +119,38 @@ func (h *HomeworkHandler) UpdateAssignment(ctx context.Context, req *v1.UpdateAs
 		return nil, status.Error(codes.PermissionDenied, "can only update own assignments")
 	}
 
-	update := domain.Assignment{
-		ID:          req.Id,
-		Title:       req.Title,
-		Description: req.Description,
+	updatedAssignment := *assignment
+	updatedAssignment.Title = req.Title
+	updatedAssignment.Description = req.Description
+
+	if req.FileId != "" {
+		updatedAssignment.FileID = req.FileId
+	} else {
+		updatedAssignment.FileID = ""
 	}
 
-	if req.FileId != nil {
-		update.FileID = *req.FileId
-	}
 	if req.DueDate != nil {
 		dueDate := req.DueDate.AsTime()
-		update.DueDate = &dueDate
+		updatedAssignment.DueDate = &dueDate
+	} else {
+		updatedAssignment.DueDate = nil
 	}
 
-	updatedAssignment, err := h.assignmentService.UpdateAssignment(ctx, &update)
+	err = h.assignmentService.UpdateAssignment(ctx, &updatedAssignment)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
 
-	return toProtoAssignment(updatedAssignment), nil
+	return toProtoAssignment(&updatedAssignment), nil
 }
 
-func (h *HomeworkHandler) DeleteAssignment(ctx context.Context, req *v1.DeleteAssignmentRequest) (*v1.DeleteAssignmentResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+func (h *HomeworkHandler) DeleteAssignment(ctx context.Context, req *v1.DeleteAssignmentRequest) (*v1.Empty, error) {
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
 
-	assignment, err := h.assignmentService.GetAssignment(ctx, req.Id)
+	assignment, err := h.assignmentService.GetAssignment(ctx, req.AssignmentId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -156,16 +159,16 @@ func (h *HomeworkHandler) DeleteAssignment(ctx context.Context, req *v1.DeleteAs
 		return nil, status.Error(codes.PermissionDenied, "can only delete own assignments")
 	}
 
-	err = h.assignmentService.DeleteAssignment(ctx, req.Id)
+	err = h.assignmentService.DeleteAssignment(ctx, req.AssignmentId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
 
-	return &v1.DeleteAssignmentResponse{}, nil
+	return &v1.Empty{}, nil
 }
 
 func (h *HomeworkHandler) ListAssignmentsByTutor(ctx context.Context, req *v1.ListAssignmentsByTutorRequest) (*v1.ListAssignmentsResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -175,11 +178,11 @@ func (h *HomeworkHandler) ListAssignmentsByTutor(ctx context.Context, req *v1.Li
 	}
 
 	var statuses []domain.AssignmentStatus
-	for _, s := range req.Statuses {
+	for _, s := range req.StatusFilter {
 		statuses = append(statuses, domain.AssignmentStatus(s))
 	}
 
-	assignments, err := h.assignmentService.ListByTutor(ctx, req.TutorId, statuses)
+	assignments, err := h.assignmentService.ListAssignmentsByTutor(ctx, req.TutorId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -190,7 +193,7 @@ func (h *HomeworkHandler) ListAssignmentsByTutor(ctx context.Context, req *v1.Li
 }
 
 func (h *HomeworkHandler) ListAssignmentsByStudent(ctx context.Context, req *v1.ListAssignmentsByStudentRequest) (*v1.ListAssignmentsResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -200,11 +203,11 @@ func (h *HomeworkHandler) ListAssignmentsByStudent(ctx context.Context, req *v1.
 	}
 
 	var statuses []domain.AssignmentStatus
-	for _, s := range req.Statuses {
+	for _, s := range req.StatusFilter {
 		statuses = append(statuses, domain.AssignmentStatus(s))
 	}
 
-	assignments, err := h.assignmentService.ListByStudent(ctx, req.StudentId, statuses)
+	assignments, err := h.assignmentService.ListAssignmentsByStudent(ctx, req.StudentId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -215,7 +218,7 @@ func (h *HomeworkHandler) ListAssignmentsByStudent(ctx context.Context, req *v1.
 }
 
 func (h *HomeworkHandler) ListAssignmentsByPair(ctx context.Context, req *v1.ListAssignmentsByPairRequest) (*v1.ListAssignmentsResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -225,11 +228,11 @@ func (h *HomeworkHandler) ListAssignmentsByPair(ctx context.Context, req *v1.Lis
 	}
 
 	var statuses []domain.AssignmentStatus
-	for _, s := range req.Statuses {
+	for _, s := range req.StatusFilter {
 		statuses = append(statuses, domain.AssignmentStatus(s))
 	}
 
-	assignments, err := h.assignmentService.ListByPair(ctx, req.TutorId, req.StudentId, statuses)
+	assignments, err := h.assignmentService.ListAssignmentsByPair(ctx, req.TutorId, req.StudentId, statuses)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -240,7 +243,7 @@ func (h *HomeworkHandler) ListAssignmentsByPair(ctx context.Context, req *v1.Lis
 }
 
 func (h *HomeworkHandler) CreateSubmission(ctx context.Context, req *v1.CreateSubmissionRequest) (*v1.Submission, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -257,13 +260,10 @@ func (h *HomeworkHandler) CreateSubmission(ctx context.Context, req *v1.CreateSu
 	submission := &domain.Submission{
 		AssignmentID: req.AssignmentId,
 		Comment:      req.Comment,
+		FileID:       req.FileId,
 	}
 
-	if req.FileId != "" {
-		submission.FileID = req.FileId
-	}
-
-	createdSubmission, err := h.submissionService.Create(ctx, submission)
+	createdSubmission, err := h.submissionService.CreateSubmission(ctx, submission)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -272,7 +272,7 @@ func (h *HomeworkHandler) CreateSubmission(ctx context.Context, req *v1.CreateSu
 }
 
 func (h *HomeworkHandler) ListSubmissionsByAssignment(ctx context.Context, req *v1.ListSubmissionsByAssignmentRequest) (*v1.ListSubmissionsResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -286,7 +286,7 @@ func (h *HomeworkHandler) ListSubmissionsByAssignment(ctx context.Context, req *
 		return nil, status.Error(codes.PermissionDenied, "must be part of the assignment to view submissions")
 	}
 
-	submissions, err := h.submissionService.ListByAssignment(ctx, req.AssignmentId)
+	submissions, err := h.submissionService.ListSubmissionsByAssignment(ctx, req.AssignmentId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -297,12 +297,12 @@ func (h *HomeworkHandler) ListSubmissionsByAssignment(ctx context.Context, req *
 }
 
 func (h *HomeworkHandler) CreateFeedback(ctx context.Context, req *v1.CreateFeedbackRequest) (*v1.Feedback, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
 
-	userRole, ok := ctxdata.UserRoleFromContext(ctx)
+	userRole, ok := ctxdata.GetUserRole(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user role not found")
 	}
@@ -311,7 +311,7 @@ func (h *HomeworkHandler) CreateFeedback(ctx context.Context, req *v1.CreateFeed
 		return nil, status.Error(codes.PermissionDenied, "only tutors can create feedback")
 	}
 
-	submission, err := h.submissionService.Get(ctx, req.SubmissionId)
+	submission, err := h.submissionService.GetSubmission(ctx, req.SubmissionId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -328,13 +328,10 @@ func (h *HomeworkHandler) CreateFeedback(ctx context.Context, req *v1.CreateFeed
 	feedback := &domain.Feedback{
 		SubmissionID: req.SubmissionId,
 		Comment:      req.Comment,
+		FileID:       &req.FileId,
 	}
 
-	if req.FileId != "" {
-		feedback.FileID = req.FileId
-	}
-
-	createdFeedback, err := h.feedbackService.Create(ctx, feedback)
+	createdFeedback, err := h.feedbackService.CreateFeedback(ctx, feedback)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -343,17 +340,17 @@ func (h *HomeworkHandler) CreateFeedback(ctx context.Context, req *v1.CreateFeed
 }
 
 func (h *HomeworkHandler) UpdateFeedback(ctx context.Context, req *v1.UpdateFeedbackRequest) (*v1.Feedback, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
 
-	feedback, err := h.feedbackService.Get(ctx, req.Id)
+	feedback, err := h.feedbackService.GetFeedback(ctx, req.SubmissionId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
 
-	submission, err := h.submissionService.Get(ctx, feedback.SubmissionID)
+	submission, err := h.submissionService.GetSubmission(ctx, feedback.SubmissionID)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -368,15 +365,13 @@ func (h *HomeworkHandler) UpdateFeedback(ctx context.Context, req *v1.UpdateFeed
 	}
 
 	update := &domain.Feedback{
-		ID:      req.Id,
-		Comment: req.Comment,
+		ID:           feedback.ID,
+		SubmissionID: req.SubmissionId,
+		Comment:      req.Comment,
+		FileID:       &req.FileId,
 	}
 
-	if req.FileId != nil {
-		update.FileID = *req.FileId
-	}
-
-	updatedFeedback, err := h.feedbackService.Update(ctx, update)
+	updatedFeedback, err := h.feedbackService.UpdateFeedback(ctx, update)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -385,7 +380,7 @@ func (h *HomeworkHandler) UpdateFeedback(ctx context.Context, req *v1.UpdateFeed
 }
 
 func (h *HomeworkHandler) ListFeedbacksByAssignment(ctx context.Context, req *v1.ListFeedbacksByAssignmentRequest) (*v1.ListFeedbacksResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -399,7 +394,7 @@ func (h *HomeworkHandler) ListFeedbacksByAssignment(ctx context.Context, req *v1
 		return nil, status.Error(codes.PermissionDenied, "must be part of the assignment to view feedbacks")
 	}
 
-	feedbacks, err := h.feedbackService.ListByAssignment(ctx, req.AssignmentId)
+	feedbacks, err := h.feedbackService.ListFeedbacksByAssignment(ctx, req.AssignmentId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -409,8 +404,8 @@ func (h *HomeworkHandler) ListFeedbacksByAssignment(ctx context.Context, req *v1
 	}, nil
 }
 
-func (h *HomeworkHandler) GetAssignmentFile(ctx context.Context, req *v1.GetAssignmentFileRequest) (*v1.GetFileResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+func (h *HomeworkHandler) GetAssignmentFile(ctx context.Context, req *v1.GetAssignmentFileRequest) (*v1.HomeworkFileURL, error) {
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
@@ -433,16 +428,39 @@ func (h *HomeworkHandler) GetAssignmentFile(ctx context.Context, req *v1.GetAssi
 		return nil, toGRPCError(err)
 	}
 
-	return &v1.GetFileResponse{Url: url}, nil
+	return &v1.HomeworkFileURL{Url: url}, nil
 }
 
-func (h *HomeworkHandler) GetSubmissionFile(ctx context.Context, req *v1.GetSubmissionFileRequest) (*v1.GetFileResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+func (h *HomeworkHandler) GetSubmission(ctx context.Context, req *v1.GetSubmissionFileRequest) (*v1.Submission, error) {
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
 
-	submission, err := h.submissionService.Get(ctx, req.SubmissionId)
+	submission, err := h.submissionService.GetSubmission(ctx, req.SubmissionId)
+	if err != nil {
+		return nil, toGRPCError(err)
+	}
+
+	assignment, err := h.assignmentService.GetAssignment(ctx, submission.AssignmentID)
+	if err != nil {
+		return nil, toGRPCError(err)
+	}
+
+	if assignment.StudentID != userID && assignment.TutorID != userID {
+		return nil, status.Error(codes.PermissionDenied, "must be part of the assignment to view submission")
+	}
+
+	return toProtoSubmission(submission), nil
+}
+
+func (h *HomeworkHandler) GetSubmissionFile(ctx context.Context, req *v1.GetSubmissionFileRequest) (*v1.HomeworkFileURL, error) {
+	userID, ok := ctxdata.GetUserID(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "user id not found")
+	}
+
+	submission, err := h.submissionService.GetSubmission(ctx, req.SubmissionId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -465,21 +483,21 @@ func (h *HomeworkHandler) GetSubmissionFile(ctx context.Context, req *v1.GetSubm
 		return nil, toGRPCError(err)
 	}
 
-	return &v1.GetFileResponse{Url: url}, nil
+	return &v1.HomeworkFileURL{Url: url}, nil
 }
 
-func (h *HomeworkHandler) GetFeedbackFile(ctx context.Context, req *v1.GetFeedbackFileRequest) (*v1.GetFileResponse, error) {
-	userID, ok := ctxdata.UserIDFromContext(ctx)
+func (h *HomeworkHandler) GetFeedbackFile(ctx context.Context, req *v1.GetFeedbackFileRequest) (*v1.HomeworkFileURL, error) {
+	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user id not found")
 	}
 
-	feedback, err := h.feedbackService.Get(ctx, req.FeedbackId)
+	feedback, err := h.feedbackService.GetFeedback(ctx, req.FeedbackId)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
 
-	submission, err := h.submissionService.Get(ctx, feedback.SubmissionID)
+	submission, err := h.submissionService.GetSubmission(ctx, feedback.SubmissionID)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
@@ -493,16 +511,16 @@ func (h *HomeworkHandler) GetFeedbackFile(ctx context.Context, req *v1.GetFeedba
 		return nil, status.Error(codes.PermissionDenied, "must be part of the assignment to view files")
 	}
 
-	if feedback.FileID == "" {
+	if feedback.FileID == nil {
 		return nil, status.Error(codes.NotFound, "feedback has no file")
 	}
 
-	url, err := h.fileService.GetFileURL(ctx, feedback.FileID)
+	url, err := h.fileService.GetFileURL(ctx, *feedback.FileID)
 	if err != nil {
 		return nil, toGRPCError(err)
 	}
 
-	return &v1.GetFileResponse{Url: url}, nil
+	return &v1.HomeworkFileURL{Url: url}, nil
 }
 
 func toGRPCError(err error) error {
@@ -580,8 +598,8 @@ func toProtoFeedback(f *domain.Feedback) *v1.Feedback {
 		EditedAt:     timestamppb.New(f.EditedAt),
 	}
 
-	if f.FileID != "" {
-		feedback.FileId = f.FileID
+	if f.FileID != nil {
+		feedback.FileId = *f.FileID
 	}
 
 	return feedback
