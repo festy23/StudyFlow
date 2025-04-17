@@ -7,78 +7,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"schedule_service/internal/config"
 	repo "schedule_service/internal/database/repo"
 	service "schedule_service/internal/service/service"
 )
 
 type PostgresRepository struct {
 	pool *pgxpool.Pool
-}
-
-func New(ctx context.Context, cfg *config.Config) (*PostgresRepository, error) {
-	if cfg.PostgresAutoMigrate {
-		if err := runMigrations(cfg); err != nil {
-			return nil, fmt.Errorf("failed to run migrations: %w", err)
-		}
-	}
-
-	pool, err := createPool(ctx, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create connection pool: %w", err)
-	}
-
-	return &PostgresRepository{pool: pool}, nil
-}
-
-func createPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
-	pgxCfg, err := pgxpool.ParseConfig(cfg.PostgresURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse connection string: %w", err)
-	}
-
-	pgxCfg.MaxConns = int32(cfg.PostgresMaxConn)
-	pgxCfg.MinConns = int32(cfg.PostgresMinConn)
-
-	pool, err := pgxpool.NewWithConfig(ctx, pgxCfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create connection pool: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	if err := pool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	return pool, nil
-}
-
-func runMigrations(cfg *config.Config) error {
-	m, err := migrate.New(
-		"file://migrations",
-		cfg.PostgresURL,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to initialize migrations: %w", err)
-	}
-
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return fmt.Errorf("failed to apply migrations: %w", err)
-	}
-
-	return nil
-}
-
-func (r *PostgresRepository) Close() {
-	if r.pool != nil {
-		r.pool.Close()
-	}
 }
 
 func (r *PostgresRepository) GetSlot(ctx context.Context, id string) (*repo.Slot, error) {

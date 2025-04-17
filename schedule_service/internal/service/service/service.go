@@ -46,8 +46,7 @@ func (s *ScheduleServer) GetSlot(ctx context.Context, req *pb.GetSlotRequest) (*
 			return nil, status.Error(codes.PermissionDenied, "permission denied")
 		}
 	}
-
-	return &pb.Slot{
+	Pbslot := &pb.Slot{
 		Id:        slot.ID,
 		TutorId:   slot.TutorID,
 		StartsAt:  timestamppb.New(slot.StartsAt),
@@ -55,7 +54,15 @@ func (s *ScheduleServer) GetSlot(ctx context.Context, req *pb.GetSlotRequest) (*
 		IsBooked:  slot.IsBooked,
 		CreatedAt: timestamppb.New(slot.CreatedAt),
 		EditedAt:  timestamppb.New(*slot.EditedAt),
-	}, nil
+	}
+	if Pbslot.EditedAt != nil {
+		Pbslot.EditedAt = timestamppb.New(*slot.EditedAt)
+	} else {
+		Pbslot.EditedAt = Pbslot.CreatedAt
+	}
+
+	return Pbslot, nil
+
 }
 
 func (s *ScheduleServer) CreateSlot(ctx context.Context, req *pb.CreateSlotRequest) (*pb.Slot, error) {

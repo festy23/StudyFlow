@@ -60,7 +60,7 @@ func main() {
 			logging.NewUnaryLoggingInterceptor(logger),
 		)),
 	)
-
+	database.RegisterHealthService(server) //readiness probe
 	pb.RegisterScheduleServiceServer(server, schedule_service)
 
 	logger.Info(ctx, "Starting gRPC server...", zap.String("port", cfg.GRPCPort))
@@ -73,6 +73,7 @@ func main() {
 	select {
 	case <-ctx.Done():
 		server.GracefulStop()
+		database.Close()
 		logger.Info(ctx, "Server Stopped")
 
 	}
