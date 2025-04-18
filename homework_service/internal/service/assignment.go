@@ -36,7 +36,11 @@ func (s *AssignmentService) CreateAssignment(ctx context.Context, req *domain.As
 		return nil, errors.New("permission denied")
 	}
 
-	if !s.userClient.IsPair(ctx, req.TutorID, req.StudentID) {
+	isPair, err := s.userClient.IsPair(ctx, req.TutorID, req.StudentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isPair {
 		return nil, errors.New("not a tutor-student pair")
 	}
 
@@ -52,7 +56,7 @@ func (s *AssignmentService) CreateAssignment(ctx context.Context, req *domain.As
 		EditedAt:    now,
 	}
 
-	err := s.assignmentRepo.Create(ctx, assignment)
+	err = s.assignmentRepo.Create(ctx, assignment)
 	if err != nil {
 		return nil, err
 	}

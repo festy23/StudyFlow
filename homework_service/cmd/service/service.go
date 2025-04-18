@@ -3,6 +3,7 @@ package main
 import (
 	"common_library/logging"
 	"common_library/metadata"
+	"google.golang.org/grpc/credentials/insecure"
 	configs "homework_service/config"
 	"net"
 	"os"
@@ -50,8 +51,22 @@ func main() {
 	submissionRepo := repository.NewSubmissionRepository(pg.DB())
 	feedbackRepo := repository.NewFeedbackRepository(pg.DB())
 
-	userClient := app.NewUserClient(cfg.Services.UserService.Address)
-	fileClient := app.NewFileClient(cfg.Services.FileService.Address)
+	userGrpc, err := grpc.NewClient(
+		cfg.Services.UserService.Address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create user service: %v", err)
+	}
+	fileGrpc, err := grpc.NewClient(
+		cfg.Services.FileService.Address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create file service: %v", err)
+	}
+	userClient := app.NewUserClient(userGrpc)
+	fileClient := app.NewFileClient(fileGrpc)
 
 	assignmentService := service.NewAssignmentService(
 		*assignmentRepo,
@@ -76,7 +91,7 @@ func main() {
 		*assignmentService,
 		submissionService,
 		feedbackService,
-		fileClient,
+		log,
 	)
 
 	kafkaConfig := kafka.Config{

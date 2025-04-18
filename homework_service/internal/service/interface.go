@@ -6,9 +6,7 @@ import (
 )
 
 type UserClient interface {
-	UserExists(ctx context.Context, userID uuid.UUID) bool
-	IsPair(ctx context.Context, tutorID, studentID uuid.UUID) bool
-	GetUserRole(ctx context.Context, userID uuid.UUID) (string, error)
+	IsPair(ctx context.Context, tutorID, studentID uuid.UUID) (bool, error)
 }
 
 type FileClient interface {
