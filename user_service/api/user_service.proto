@@ -14,7 +14,7 @@ service UserService {
 	rpc GetUser(GetUserRequest) returns (UserPublic);
 	rpc UpdateUser(UpdateUserRequest) returns (User);
 
-	rpc UpdateTutorProfile(TutorProfile) returns (TutorProfile);
+	rpc UpdateTutorProfile(UpdateTutorProfileRequest) returns (TutorProfile);
 	rpc GetTutorProfileByUserId(GetTutorProfileByUserIdRequest) returns (TutorProfile);
 
 	rpc GetTutorStudent(GetTutorStudentRequest) returns (TutorStudent);
@@ -26,12 +26,13 @@ service UserService {
 	rpc ListTutorsForStudent(ListTutorsForStudentRequest) returns (ListTutorsForStudentResponse);
 
 	rpc ResolveTutorStudentContext(ResolveTutorStudentContextRequest) returns (ResolvedTutorStudentContext);
+	rpc AcceptInvitationFromTutor(AcceptInvitationFromTutorRequest) returns (Empty);
 }
 
 // ==== REQUESTS ====
 
 message RegisterViaTelegramRequest {
-	string telegram_id = 1;
+	int64 telegram_id = 1;
 	string role = 2;
 	optional string username = 3;
 	optional string first_name = 4;
@@ -112,12 +113,15 @@ message ResolveTutorStudentContextRequest {
 }
 
 message ResolvedTutorStudentContext {
-	bool relationship_exists = 1;
-	optional string relationship_status = 2; // invited / active / blocked / removed
+	string relationship_status = 2; // invited / active / blocked / removed
 
 	optional int32 lesson_price_rub = 3;
 	optional string lesson_connection_link = 4;
 	optional string payment_info = 5;
+}
+
+message AcceptInvitationFromTutorRequest {
+	string tutor_id = 1;
 }
 
 message Empty {}

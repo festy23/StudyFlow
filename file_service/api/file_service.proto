@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package file.v1;
 
+option go_package = "pkg/api";
+
 import "google/protobuf/timestamp.proto";
 
 service FileService {
@@ -19,14 +21,13 @@ service FileService {
 
 message InitUploadRequest {
   string uploaded_by = 1;      // user_id
-  string file_name = 2;        // имя файла (например: homework.pdf)
+  string filename = 2;        // имя файла (например: homework.pdf)
 }
 
 message InitUploadResponse {
   string file_id = 1;
   string upload_url = 2;
-  string method = 3;                  // обычно "PUT"
-  map<string, string> headers = 4;    // например: Content-Type
+  string method = 3;
 }
 
 // ==== DOWNLOAD ====
@@ -47,7 +48,8 @@ message GetFileMetaRequest {
 
 message File {
   string id = 1;
-  string uploaded_by = 2;
-  string file_name = 3;
-  google.protobuf.Timestamp created_at = 4;
+  string extension = 2;
+  string uploaded_by = 3;
+  optional string filename = 4;
+  google.protobuf.Timestamp created_at = 5;
 }

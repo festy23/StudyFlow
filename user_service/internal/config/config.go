@@ -12,6 +12,7 @@ type Config struct {
 	PostgresMaxConn     int32  `env:"POSTGRES_MAX_CONN" env-default:"5"`
 	PostgresMinConn     int32  `env:"POSTGRES_MIN_CONN" env-default:"1"`
 	PostgresAutoMigrate bool   `env:"POSTGRES_AUTO_MIGRATE" env-default:"true"`
+	TelegramSecret      string `env:"TELEGRAM_SECRET" env-default:"no-secret"`
 }
 
 func New() (*Config, error) {

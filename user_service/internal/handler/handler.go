@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"common_library/logging"
 	"context"
 	"errors"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"slices"
 	"userservice/internal/errdefs"
@@ -29,6 +30,7 @@ type UserService interface {
 	ListTutorStudents(ctx context.Context, tutorId uuid.UUID) ([]*model.TutorStudent, error)
 	ListTutorStudentsForStudent(ctx context.Context, studentId uuid.UUID) ([]*model.TutorStudent, error)
 	ResolveTutorStudentContext(ctx context.Context, tutorId uuid.UUID, studentId uuid.UUID) (*model.TutorStudentContext, error)
+	AcceptInvitationFromTutor(ctx context.Context, tutorId uuid.UUID) error
 }
 
 type UserServiceServer struct {
@@ -42,15 +44,19 @@ func NewUserServiceServer(userService UserService) *UserServiceServer {
 
 func (h *UserServiceServer) RegisterViaTelegram(ctx context.Context, req *pb.RegisterViaTelegramRequest) (*pb.User, error) {
 	input := &model.RegisterViaTelegramInput{
-		TelegramId: req.GetTelegramId(),
+		TelegramId: req.TelegramId,
+		Role:       model.Role(req.Role),
 		Username:   req.Username,
 		FirstName:  req.FirstName,
 		LastName:   req.LastName,
 		Timezone:   req.Timezone,
 	}
+	if logger, ok := logging.GetFromContext(ctx); ok {
+		logger.Info(ctx, "registering user", zap.Any("input", input))
+	}
 	user, err := h.service.RegisterViaTelegram(ctx, input)
 	if err != nil {
-		return nil, mapError(err, errdefs.ErrAlreadyExists)
+		return nil, mapError(err, errdefs.ErrAlreadyExists, errdefs.ValidationErr)
 	}
 
 	return toPbUser(user), nil
@@ -69,7 +75,7 @@ func (h *UserServiceServer) AuthorizeByAuthHeader(ctx context.Context, req *pb.A
 	return toPbUser(user), nil
 }
 
-func (h *UserServiceServer) GetMe(ctx context.Context) (*pb.User, error) {
+func (h *UserServiceServer) GetMe(ctx context.Context, _ *pb.Empty) (*pb.User, error) {
 	user, err := h.service.GetMe(ctx)
 
 	if err != nil {
@@ -230,7 +236,7 @@ func (h *UserServiceServer) UpdateTutorStudent(ctx context.Context, req *pb.Upda
 	return toPbTutorStudent(tutorStudent), nil
 }
 
-func (h *UserServiceServer) DeleteTutorStudent(ctx context.Context, req *pb.DeleteTutorStudentRequest) (*emptypb.Empty, error) {
+func (h *UserServiceServer) DeleteTutorStudent(ctx context.Context, req *pb.DeleteTutorStudentRequest) (*pb.Empty, error) {
 	tutorId, err := uuid.Parse(req.TutorId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -246,7 +252,7 @@ func (h *UserServiceServer) DeleteTutorStudent(ctx context.Context, req *pb.Dele
 		return nil, mapError(err, errdefs.ErrNotFound, errdefs.ErrPermissionDenied)
 	}
 
-	return &emptypb.Empty{}, nil
+	return &pb.Empty{}, nil
 }
 
 func (h *UserServiceServer) ListTutorStudents(ctx context.Context, req *pb.ListTutorStudentsRequest) (*pb.ListTutorStudentsResponse, error) {
@@ -302,22 +308,27 @@ func (h *UserServiceServer) ResolveTutorStudentContext(ctx context.Context, req 
 		return nil, mapError(err, errdefs.ErrNotFound, errdefs.ErrPermissionDenied)
 	}
 
-	var st *string = nil
-	if result.RelationshipStatus != nil {
-		s := result.RelationshipStatus.String()
-		st = &s
-	}
-
 	resp := &pb.ResolvedTutorStudentContext{
-		RelationshipExists: result.RelationshipExists,
-		RelationshipStatus: st,
-
+		RelationshipStatus:   result.RelationshipStatus.String(),
 		LessonPriceRub:       result.LessonPriceRub,
 		LessonConnectionLink: result.LessonConnectionLink,
 		PaymentInfo:          result.PaymentInfo,
 	}
 
 	return resp, nil
+}
+
+func (h *UserServiceServer) AcceptInvitationFromTutor(ctx context.Context, req *pb.AcceptInvitationFromTutorRequest) (*pb.Empty, error) {
+	tutorId, err := uuid.Parse(req.TutorId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
+	if err := h.service.AcceptInvitationFromTutor(ctx, tutorId); err != nil {
+		return nil, mapError(err, errdefs.ErrPermissionDenied, errdefs.ErrNotFound)
+	}
+
+	return &pb.Empty{}, nil
 }
 
 func toPbUser(user *model.User) *pb.User {
@@ -353,6 +364,7 @@ func toPbTutorStudent(userStudent *model.TutorStudent) *pb.TutorStudent {
 		Id:                   userStudent.Id.String(),
 		TutorId:              userStudent.TutorId.String(),
 		StudentId:            userStudent.StudentId.String(),
+		Status:               userStudent.Status.String(),
 		LessonPriceRub:       userStudent.LessonPriceRub,
 		LessonConnectionLink: userStudent.LessonConnectionLink,
 		CreatedAt:            timestamppb.New(userStudent.CreatedAt),
