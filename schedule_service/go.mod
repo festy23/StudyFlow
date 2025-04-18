@@ -4,7 +4,10 @@ go 1.24.0
 
 replace common_library => ../common_library
 
+replace userservice => ../user_service
+
 require (
+	userservice v0.0.0
 	common_library v0.0.0
 	github.com/google/uuid v1.6.0
 	google.golang.org/grpc v1.71.1

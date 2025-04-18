@@ -5,24 +5,26 @@ import (
 	"errors"
 	"time"
 
+	"common_library/ctxdata"
+	"schedule_service/internal/database/repo"
+	pb "schedule_service/pkg/api"
+
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"common_library/ctxdata"
-	"schedule_service/internal/database/repo"
-	pb "schedule_service/pkg/api"
 )
 
 type ScheduleServer struct {
 	pb.UnimplementedScheduleServiceServer
-	db repo.Repository
+	db         repo.Repository
+	UserClient *UserClient
 }
 
 func NewScheduleServer(db repo.Repository) *ScheduleServer {
 	return &ScheduleServer{
-		db: db,
+		db:         db,
+		UserClient: &UserClient{},
 	}
 }
 
@@ -45,7 +47,7 @@ func (s *ScheduleServer) GetSlot(ctx context.Context, req *pb.GetSlotRequest) (*
 	}
 
 	if slot.TutorID != userID {
-		isValidPair, err := ValidateTutorStudentPair(ctx, slot.TutorID, userID)
+		isValidPair, err := s.ValidateTutorStudentPair(ctx, slot.TutorID, userID)
 		if err != nil || !isValidPair {
 			return nil, status.Error(codes.PermissionDenied, "permission denied")
 		}
@@ -229,7 +231,7 @@ func (s *ScheduleServer) ListSlotsByTutor(ctx context.Context, req *pb.ListSlots
 	}
 
 	if req.TutorId != userID {
-		isValidPair, err := ValidateTutorStudentPair(ctx, req.TutorId, userID)
+		isValidPair, err := s.ValidateTutorStudentPair(ctx, req.TutorId, userID)
 		if err != nil || !isValidPair {
 			return nil, status.Error(codes.PermissionDenied, "permission denied")
 		}
@@ -333,7 +335,7 @@ func (s *ScheduleServer) CreateLesson(ctx context.Context, req *pb.CreateLessonR
 		return nil, StatusPermissionDenied
 	}
 
-	isValidPair, err := ValidateTutorStudentPair(ctx, tutorID, studentID)
+	isValidPair, err := s.ValidateTutorStudentPair(ctx, tutorID, studentID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to validate tutor-student relationship")
 	}
@@ -536,7 +538,7 @@ func (s *ScheduleServer) ListLessonsByPair(ctx context.Context, req *pb.ListLess
 		return nil, StatusPermissionDenied
 	}
 
-	isValidPair, err := ValidateTutorStudentPair(ctx, req.TutorId, req.StudentId)
+	isValidPair, err := s.ValidateTutorStudentPair(ctx, req.TutorId, req.StudentId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to validate tutor-student relationship")
 	}
