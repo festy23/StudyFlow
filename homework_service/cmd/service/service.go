@@ -14,7 +14,7 @@ import (
 
 	"homework_service/internal/app"
 	"homework_service/internal/repository"
-	homework_grpc "homework_service/internal/server/homework_grpc"
+	"homework_service/internal/server/homework_grpc"
 	"homework_service/internal/service"
 	"homework_service/pkg/db"
 	"homework_service/pkg/kafka"
@@ -72,12 +72,11 @@ func main() {
 		fileClient,
 	)
 
-	handler := homework_grpc.NewHomeworkServer(
+	handler := homework_grpc.NewHomeworkHandler(
 		*assignmentService,
 		submissionService,
 		feedbackService,
-		*fileClient,
-		*log,
+		fileClient,
 	)
 
 	kafkaConfig := kafka.Config{

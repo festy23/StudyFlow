@@ -4,7 +4,7 @@ package homework.v1;
 
 option go_package = "./pkg/api";
 
-import "timestamp.proto";
+import "google/protobuf/timestamp.proto";
 
 // ==== SERVICE ====
 
@@ -55,18 +55,18 @@ message DeleteAssignmentRequest {
 message CreateAssignmentRequest {
   string tutor_id = 1;
   string student_id = 2;
-  string title = 3;
-  string description = 4;
-  string file_id = 5;
-  google.protobuf.Timestamp due_date = 6;
+  optional string title = 3;
+  optional string description = 4;
+  optional string file_id = 5;
+  optional google.protobuf.Timestamp due_date = 6;
 }
 
 message UpdateAssignmentRequest {
   string id = 1;
-  string title = 2;
-  string description = 3;
-  string file_id = 4;
-  google.protobuf.Timestamp due_date = 5;
+  optional string title = 2;
+  optional string description = 3;
+  optional string file_id = 4;
+  optional google.protobuf.Timestamp due_date = 5;
 }
 
 message ListAssignmentsByTutorRequest {
@@ -91,8 +91,8 @@ message ListAssignmentsResponse {
 
 message CreateSubmissionRequest {
   string assignment_id = 1;
-  string file_id = 2;
-  string comment = 3;
+  optional string file_id = 2;
+  optional string comment = 3;
 }
 
 message ListSubmissionsByAssignmentRequest {
@@ -105,14 +105,14 @@ message ListSubmissionsResponse {
 
 message CreateFeedbackRequest {
   string submission_id = 1;
-  string file_id = 2;
-  string comment = 3;
+  optional string file_id = 2;
+  optional string comment = 3;
 }
 
 message UpdateFeedbackRequest {
-  string submission_id = 1;
-  string file_id = 2;
-  string comment = 3;
+  string id = 1;
+  optional string file_id = 2;
+  optional string comment = 3;
 }
 
 message ListFeedbacksByAssignmentRequest {
@@ -145,10 +145,10 @@ message Assignment {
   string id = 1;
   string tutor_id = 2;
   string student_id = 3;
-  string title = 4;
-  string description = 5;
-  string file_id = 6;
-  google.protobuf.Timestamp due_date = 7;
+  optional string title = 4;
+  optional string description = 5;
+  optional string file_id = 6;
+  optional google.protobuf.Timestamp due_date = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp edited_at = 9;
 }
@@ -156,9 +156,8 @@ message Assignment {
 message Submission {
   string id = 1;
   string assignment_id = 2;
-  string file_id = 3;
-  string comment = 4;
-  google.protobuf.Timestamp submitted_at = 5;
+  optional string file_id = 3;
+  optional string comment = 4;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp edited_at = 7;
 }
@@ -166,8 +165,8 @@ message Submission {
 message Feedback {
   string id = 1;
   string submission_id = 2;
-  string file_id = 3;
-  string comment = 4;
+  optional string file_id = 3;
+  optional string comment = 4;
   google.protobuf.Timestamp created_at = 5;
   google.protobuf.Timestamp edited_at = 6;
 }

@@ -1,4 +1,4 @@
-package grpc
+package homework_grpc
 
 import (
 	"context"

@@ -2,8 +2,8 @@ CREATE TABLE assignments (
     id UUID PRIMARY KEY,
     tutor_id UUID NOT NULL,
     student_id UUID NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
+    title TEXT,
+    description TEXT,
     file_id UUID,
     due_date TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -13,9 +13,8 @@ CREATE TABLE assignments (
 CREATE TABLE submissions (
     id UUID PRIMARY KEY,
     assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
-    file_id UUID NOT NULL,
+    file_id UUID,
     comment TEXT,
-    submitted_at TIMESTAMP NOT NULL DEFAULT NOW(),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     edited_at TIMESTAMP NOT NULL DEFAULT NOW()  
 );

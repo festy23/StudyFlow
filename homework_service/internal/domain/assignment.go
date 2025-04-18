@@ -1,21 +1,20 @@
 package domain
 
 import (
-	"context"
+	"github.com/google/uuid"
 	"time"
 )
 
 type Assignment struct {
-	ID          string
-	TutorID     string
-	StudentID   string
-	Title       string
-	Description string
-	FileID      string
+	ID          uuid.UUID
+	TutorID     uuid.UUID
+	StudentID   uuid.UUID
+	Title       *string
+	Description *string
+	FileID      *uuid.UUID
 	DueDate     *time.Time
 	CreatedAt   time.Time
 	EditedAt    time.Time
-	Status      string
 }
 
 type AssignmentStatus string
@@ -29,15 +28,7 @@ const (
 )
 
 type AssignmentFilter struct {
-	TutorID     string
-	StudentID   string
-	Statuses    []AssignmentStatus
-	OnlyActive  bool
-	OnlyOverdue bool
-}
-
-type AssignmentRepository interface {
-	Create(ctx context.Context, assignment *Assignment) error
-	GetByID(ctx context.Context, id string) (*Assignment, error)
-	ListByTutorID(ctx context.Context, tutorID string) ([]*Assignment, error)
+	TutorID   uuid.UUID
+	StudentID uuid.UUID
+	Statuses  []AssignmentStatus
 }
