@@ -14,6 +14,7 @@ import (
 
 	"homework_service/internal/domain"
 	"homework_service/internal/repository"
+	"homework_service/internal/service"
 	v1 "homework_service/pkg/api"
 	"homework_service/pkg/logger"
 
@@ -152,7 +153,7 @@ func TestHomeworkHandler(t *testing.T) {
 		feedbackService := &MockFeedbackService{}
 
 		h := handler.NewHomeworkHandler(
-			assignmentService,
+			service.AssignmentService{},
 			submissionService,
 			feedbackService,
 			log,
@@ -203,12 +204,11 @@ func TestHomeworkHandler(t *testing.T) {
 	})
 
 	t.Run("CreateAssignment - invalid tutor ID", func(t *testing.T) {
-		assignmentService := &MockAssignmentService{}
 		submissionService := &MockSubmissionService{}
 		feedbackService := &MockFeedbackService{}
 
 		h := handler.NewHomeworkHandler(
-			assignmentService,
+			service.AssignmentService{},
 			submissionService,
 			feedbackService,
 			log,
@@ -242,7 +242,7 @@ func TestHomeworkHandler(t *testing.T) {
 		title := "Test"
 
 		h := handler.NewHomeworkHandler(
-			assignmentService,
+			service.AssignmentService{},
 			submissionService,
 			feedbackService,
 			log,
@@ -262,12 +262,11 @@ func TestHomeworkHandler(t *testing.T) {
 	})
 
 	t.Run("CreateSubmission - success", func(t *testing.T) {
-		assignmentService := &MockAssignmentService{}
 		submissionService := &MockSubmissionService{}
 		feedbackService := &MockFeedbackService{}
 
 		h := handler.NewHomeworkHandler(
-			assignmentService,
+			service.AssignmentService{},
 			submissionService,
 			feedbackService,
 			log,
@@ -306,12 +305,11 @@ func TestHomeworkHandler(t *testing.T) {
 	})
 
 	t.Run("CreateFeedback - success", func(t *testing.T) {
-		assignmentService := &MockAssignmentService{}
 		submissionService := &MockSubmissionService{}
 		feedbackService := &MockFeedbackService{}
 
 		h := handler.NewHomeworkHandler(
-			assignmentService,
+			service.AssignmentService{},
 			submissionService,
 			feedbackService,
 			log,
@@ -351,7 +349,7 @@ func TestHomeworkHandler(t *testing.T) {
 		feedbackService := &MockFeedbackService{}
 
 		h := handler.NewHomeworkHandler(
-			assignmentService,
+			service.AssignmentService{},
 			submissionService,
 			feedbackService,
 			log,
