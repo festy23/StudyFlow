@@ -1,296 +1,372 @@
-package homework_grpc
+package homework_grpc_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
-	"homework_service/internal/domain"
-	"homework_service/internal/service"
-	"homework_service/internal/service/mocks"
-
-	"homework_service/internal/repository"
-	v1 "homework_service/pkg/api"
-
-	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"homework_service/internal/domain"
+	"homework_service/internal/repository"
+	v1 "homework_service/pkg/api"
+	"homework_service/pkg/logger"
+
+	handler "homework_service/internal/server/homework_grpc"
 )
 
-func TestHomeworkHandler_CreateAssignment(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockAssignmentService := mocks.NewMockAssignmentService(ctrl)
-	handler := NewHomeworkHandler(mockAssignmentService, nil, nil, nil, nil)
-
-	now := time.Now()
-	dueDate := now.Add(24 * time.Hour)
-	validRequest := &v1.CreateAssignmentRequest{
-		TutorId:     "tutor-123",
-		StudentId:   "student-456",
-		Title:       "Test Assignment",
-		Description: "Test Description",
-		FileId:      "file-789",
-		DueDate:     timestamppb.New(dueDate),
-	}
-
-	tests := []struct {
-		name          string
-		ctx           context.Context
-		req           *v1.CreateAssignmentRequest
-		mockSetup     func()
-		expectedResp  *v1.Assignment
-		expectedError error
-	}{
-		{
-			name: "Success",
-			ctx:  context.WithValue(context.Background(), "user_id", "tutor-123"),
-			req:  validRequest,
-			mockSetup: func() {
-				mockAssignmentService.EXPECT().CreateAssignment(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, a *domain.Assignment) (*domain.Assignment, error) {
-						assert.Equal(t, "tutor-123", a.TutorID)
-						assert.Equal(t, "student-456", a.StudentID)
-						assert.Equal(t, "Test Assignment", a.Title)
-						assert.Equal(t, "Test Description", a.Description)
-						assert.Equal(t, "file-789", a.FileID)
-						assert.Equal(t, dueDate, *a.DueDate)
-
-						return &domain.Assignment{
-							ID:          "assignment-123",
-							TutorID:     a.TutorID,
-							StudentID:   a.StudentID,
-							Title:       a.Title,
-							Description: a.Description,
-							FileID:      a.FileID,
-							DueDate:     a.DueDate,
-							CreatedAt:   now,
-							EditedAt:    now,
-						}, nil
-					})
-			},
-			expectedResp: &v1.Assignment{
-				Id:          "assignment-123",
-				TutorId:     "tutor-123",
-				StudentId:   "student-456",
-				Title:       "Test Assignment",
-				Description: "Test Description",
-				FileId:      "file-789",
-				DueDate:     timestamppb.New(dueDate),
-				CreatedAt:   timestamppb.New(now),
-				EditedAt:    timestamppb.New(now),
-			},
-		},
-		{
-			name:          "Unauthenticated - no user_id in context",
-			ctx:           context.Background(),
-			req:           validRequest,
-			mockSetup:     func() {},
-			expectedError: status.Error(codes.Unauthenticated, "user id not found"),
-		},
-		{
-			name:          "PermissionDenied - tutor_id != user_id",
-			ctx:           context.WithValue(context.Background(), "user_id", "different-tutor"),
-			req:           validRequest,
-			mockSetup:     func() {},
-			expectedError: status.Error(codes.PermissionDenied, "can only create assignments for yourself"),
-		},
-		{
-			name: "Service error - not found",
-			ctx:  context.WithValue(context.Background(), "user_id", "tutor-123"),
-			req:  validRequest,
-			mockSetup: func() {
-				mockAssignmentService.EXPECT().CreateAssignment(gomock.Any(), gomock.Any()).
-					Return(nil, repository.ErrNotFound)
-			},
-			expectedError: status.Error(codes.NotFound, repository.ErrNotFound.Error()),
-		},
-		{
-			name: "Service error - permission denied",
-			ctx:  context.WithValue(context.Background(), "user_id", "tutor-123"),
-			req:  validRequest,
-			mockSetup: func() {
-				mockAssignmentService.EXPECT().CreateAssignment(gomock.Any(), gomock.Any()).
-					Return(nil, service.ErrPermissionDenied)
-			},
-			expectedError: status.Error(codes.PermissionDenied, service.ErrPermissionDenied.Error()),
-		},
-		{
-			name: "Service error - invalid argument",
-			ctx:  context.WithValue(context.Background(), "user_id", "tutor-123"),
-			req:  validRequest,
-			mockSetup: func() {
-				mockAssignmentService.EXPECT().CreateAssignment(gomock.Any(), gomock.Any()).
-					Return(nil, service.ErrInvalidArgument)
-			},
-			expectedError: status.Error(codes.InvalidArgument, service.ErrInvalidArgument.Error()),
-		},
-		{
-			name: "Service error - internal",
-			ctx:  context.WithValue(context.Background(), "user_id", "tutor-123"),
-			req:  validRequest,
-			mockSetup: func() {
-				mockAssignmentService.EXPECT().CreateAssignment(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("some unexpected error"))
-			},
-			expectedError: status.Error(codes.Internal, "internal server error"),
-		},
-		{
-			name: "Success - optional fields omitted",
-			ctx:  context.WithValue(context.Background(), "user_id", "tutor-123"),
-			req: &v1.CreateAssignmentRequest{
-				TutorId:     "tutor-123",
-				StudentId:   "student-456",
-				Title:       "Test Assignment",
-				Description: "Test Description",
-			},
-			mockSetup: func() {
-				mockAssignmentService.EXPECT().CreateAssignment(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, a *domain.Assignment) (*domain.Assignment, error) {
-						assert.Empty(t, a.FileID)
-						assert.Nil(t, a.DueDate)
-
-						return &domain.Assignment{
-							ID:          "assignment-123",
-							TutorID:     a.TutorID,
-							StudentID:   a.StudentID,
-							Title:       a.Title,
-							Description: a.Description,
-							CreatedAt:   now,
-							EditedAt:    now,
-						}, nil
-					})
-			},
-			expectedResp: &v1.Assignment{
-				Id:          "assignment-123",
-				TutorId:     "tutor-123",
-				StudentId:   "student-456",
-				Title:       "Test Assignment",
-				Description: "Test Description",
-				CreatedAt:   timestamppb.New(now),
-				EditedAt:    timestamppb.New(now),
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mockSetup()
-
-			resp, err := handler.CreateAssignment(tt.ctx, tt.req)
-
-			if tt.expectedError != nil {
-				assert.Equal(t, tt.expectedError, err)
-				assert.Nil(t, resp)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedResp, resp)
-			}
-		})
-	}
+type MockAssignmentService struct {
+	mock.Mock
 }
 
-func TestToGRPCError(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    error
-		expected error
-	}{
-		{
-			name:     "NotFound",
-			input:    repository.ErrNotFound,
-			expected: status.Error(codes.NotFound, repository.ErrNotFound.Error()),
-		},
-		{
-			name:     "PermissionDenied",
-			input:    service.ErrPermissionDenied,
-			expected: status.Error(codes.PermissionDenied, service.ErrPermissionDenied.Error()),
-		},
-		{
-			name:     "InvalidArgument",
-			input:    service.ErrInvalidArgument,
-			expected: status.Error(codes.InvalidArgument, service.ErrInvalidArgument.Error()),
-		},
-		{
-			name:     "InternalError",
-			input:    errors.New("some error"),
-			expected: status.Error(codes.Internal, "internal server error"),
-		},
+func (m *MockAssignmentService) CreateAssignment(ctx context.Context, assignment *domain.Assignment) (*domain.Assignment, error) {
+	args := m.Called(ctx, assignment)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := toGRPCError(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
+	return args.Get(0).(*domain.Assignment), args.Error(1)
 }
 
-func TestToProtoAssignment(t *testing.T) {
-	now := time.Now()
-	dueDate := now.Add(24 * time.Hour)
+func (m *MockAssignmentService) GetAssignment(ctx context.Context, id uuid.UUID) (*domain.Assignment, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Assignment), args.Error(1)
+}
 
-	tests := []struct {
-		name     string
-		input    *domain.Assignment
-		expected *v1.Assignment
-	}{
-		{
-			name: "All fields",
-			input: &domain.Assignment{
-				ID:          "assignment-123",
-				TutorID:     "tutor-123",
-				StudentID:   "student-456",
-				Title:       "Test Assignment",
-				Description: "Test Description",
-				FileID:      "file-789",
-				DueDate:     &dueDate,
-				CreatedAt:   now,
-				EditedAt:    now,
-			},
-			expected: &v1.Assignment{
-				Id:          "assignment-123",
-				TutorId:     "tutor-123",
-				StudentId:   "student-456",
-				Title:       "Test Assignment",
-				Description: "Test Description",
-				FileId:      "file-789",
-				DueDate:     timestamppb.New(dueDate),
-				CreatedAt:   timestamppb.New(now),
-				EditedAt:    timestamppb.New(now),
-			},
-		},
-		{
-			name: "Optional fields omitted",
-			input: &domain.Assignment{
-				ID:          "assignment-123",
-				TutorID:     "tutor-123",
-				StudentID:   "student-456",
-				Title:       "Test Assignment",
-				Description: "Test Description",
-				CreatedAt:   now,
-				EditedAt:    now,
-			},
-			expected: &v1.Assignment{
-				Id:          "assignment-123",
-				TutorId:     "tutor-123",
-				StudentId:   "student-456",
-				Title:       "Test Assignment",
-				Description: "Test Description",
-				CreatedAt:   timestamppb.New(now),
-				EditedAt:    timestamppb.New(now),
-			},
-		},
+func (m *MockAssignmentService) UpdateAssignment(ctx context.Context, assignment *domain.Assignment) error {
+	args := m.Called(ctx, assignment)
+	return args.Error(0)
+}
+
+func (m *MockAssignmentService) DeleteAssignment(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockAssignmentService) ListAssignmentsByTutor(ctx context.Context, tutorID uuid.UUID, statuses []domain.AssignmentStatus) ([]*domain.Assignment, error) {
+	args := m.Called(ctx, tutorID, statuses)
+	return args.Get(0).([]*domain.Assignment), args.Error(1)
+}
+
+func (m *MockAssignmentService) ListAssignmentsByStudent(ctx context.Context, studentID uuid.UUID, statuses []domain.AssignmentStatus) ([]*domain.Assignment, error) {
+	args := m.Called(ctx, studentID, statuses)
+	return args.Get(0).([]*domain.Assignment), args.Error(1)
+}
+
+func (m *MockAssignmentService) ListAssignmentsByPair(ctx context.Context, tutorID, studentID uuid.UUID, statuses []domain.AssignmentStatus) ([]*domain.Assignment, error) {
+	args := m.Called(ctx, tutorID, studentID, statuses)
+	return args.Get(0).([]*domain.Assignment), args.Error(1)
+}
+
+func (m *MockAssignmentService) GetAssignmentFileURL(ctx context.Context, id uuid.UUID) (string, error) {
+	args := m.Called(ctx, id)
+	return args.String(0), args.Error(1)
+}
+
+type MockSubmissionService struct {
+	mock.Mock
+}
+
+func (m *MockSubmissionService) CreateSubmission(ctx context.Context, submission *domain.Submission) (*domain.Submission, error) {
+	args := m.Called(ctx, submission)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Submission), args.Error(1)
+}
+
+func (m *MockSubmissionService) GetSubmission(ctx context.Context, id uuid.UUID) (*domain.Submission, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Submission), args.Error(1)
+}
+
+func (m *MockSubmissionService) ListSubmissionsByAssignment(ctx context.Context, assignmentID uuid.UUID) ([]*domain.Submission, error) {
+	args := m.Called(ctx, assignmentID)
+	return args.Get(0).([]*domain.Submission), args.Error(1)
+}
+
+func (m *MockSubmissionService) GetSubmissionFileURL(ctx context.Context, id uuid.UUID) (string, error) {
+	args := m.Called(ctx, id)
+	return args.String(0), args.Error(1)
+}
+
+type MockFeedbackService struct {
+	mock.Mock
+}
+
+func (m *MockFeedbackService) CreateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error) {
+	args := m.Called(ctx, feedback)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Feedback), args.Error(1)
+}
+
+func (m *MockFeedbackService) GetFeedback(ctx context.Context, id uuid.UUID) (*domain.Feedback, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Feedback), args.Error(1)
+}
+
+func (m *MockFeedbackService) UpdateFeedback(ctx context.Context, feedback *domain.Feedback) (*domain.Feedback, error) {
+	args := m.Called(ctx, feedback)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Feedback), args.Error(1)
+}
+
+func (m *MockFeedbackService) ListFeedbacksByAssignment(ctx context.Context, assignmentID uuid.UUID) ([]*domain.Feedback, error) {
+	args := m.Called(ctx, assignmentID)
+	return args.Get(0).([]*domain.Feedback), args.Error(1)
+}
+
+func (m *MockFeedbackService) GetFeedbackFileURL(ctx context.Context, id uuid.UUID) (string, error) {
+	args := m.Called(ctx, id)
+	return args.String(0), args.Error(1)
+}
+
+func TestHomeworkHandler(t *testing.T) {
+	log := logger.New()
+	ctx := context.Background()
+
+	str := func(s string) *string {
+		return &s
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := toProtoAssignment(tt.input)
-			assert.Equal(t, tt.expected, result)
+	t.Run("CreateAssignment - success", func(t *testing.T) {
+		assignmentService := &MockAssignmentService{}
+		submissionService := &MockSubmissionService{}
+		feedbackService := &MockFeedbackService{}
+
+		h := handler.NewHomeworkHandler(
+			assignmentService,
+			submissionService,
+			feedbackService,
+			log,
+		)
+
+		tutorID := uuid.New()
+		studentID := uuid.New()
+		fileID := uuid.New()
+		dueDate := time.Now().Add(24 * time.Hour)
+		title := "Test Assignment"
+		description := "Test Description"
+		fileIDStr := fileID.String()
+
+		expectedAssignment := &domain.Assignment{
+			ID:          uuid.New(),
+			TutorID:     tutorID,
+			StudentID:   studentID,
+			Title:       str(title),
+			Description: str(description),
+			FileID:      &fileID,
+			DueDate:     &dueDate,
+			CreatedAt:   time.Now(),
+			EditedAt:    time.Now(),
+		}
+
+		assignmentService.On("CreateAssignment", ctx, mock.AnythingOfType("*domain.Assignment")).
+			Return(expectedAssignment, nil)
+
+		str := func(s string) *string {
+			return &s
+		}
+
+		resp, err := h.CreateAssignment(ctx, &v1.CreateAssignmentRequest{
+			TutorId:     tutorID.String(),
+			StudentId:   studentID.String(),
+			Title:       str(title),
+			Description: str(description),
+			FileId:      &fileIDStr,
+			DueDate:     timestamppb.New(dueDate),
 		})
-	}
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedAssignment.ID.String(), resp.Id)
+		assert.Equal(t, title, resp.Title)
+		assert.Equal(t, description, resp.Description)
+		assert.Equal(t, fileID.String(), *resp.FileId)
+		assert.Equal(t, dueDate.Unix(), resp.DueDate.AsTime().Unix())
+	})
+
+	t.Run("CreateAssignment - invalid tutor ID", func(t *testing.T) {
+		assignmentService := &MockAssignmentService{}
+		submissionService := &MockSubmissionService{}
+		feedbackService := &MockFeedbackService{}
+
+		h := handler.NewHomeworkHandler(
+			assignmentService,
+			submissionService,
+			feedbackService,
+			log,
+		)
+
+		str := func(s string) *string {
+			return &s
+		}
+
+		title := "Test"
+
+		_, err := h.CreateAssignment(ctx, &v1.CreateAssignmentRequest{
+			TutorId:   "invalid-uuid",
+			StudentId: uuid.New().String(),
+			Title:     str(title),
+		})
+
+		assert.Error(t, err)
+		assert.Equal(t, codes.InvalidArgument, status.Code(err))
+	})
+
+	t.Run("GetAssignment - not found", func(t *testing.T) {
+		assignmentService := &MockAssignmentService{}
+		submissionService := &MockSubmissionService{}
+		feedbackService := &MockFeedbackService{}
+
+		str := func(s string) *string {
+			return &s
+		}
+
+		title := "Test"
+
+		h := handler.NewHomeworkHandler(
+			assignmentService,
+			submissionService,
+			feedbackService,
+			log,
+		)
+
+		assignmentID := uuid.New()
+		assignmentService.On("GetAssignment", ctx, assignmentID).
+			Return((*domain.Assignment)(nil), repository.ErrNotFound)
+
+		_, err := h.UpdateAssignment(ctx, &v1.UpdateAssignmentRequest{
+			Id:    assignmentID.String(),
+			Title: str(title),
+		})
+
+		assert.Error(t, err)
+		assert.Equal(t, codes.NotFound, status.Code(err))
+	})
+
+	t.Run("CreateSubmission - success", func(t *testing.T) {
+		assignmentService := &MockAssignmentService{}
+		submissionService := &MockSubmissionService{}
+		feedbackService := &MockFeedbackService{}
+
+		h := handler.NewHomeworkHandler(
+			assignmentService,
+			submissionService,
+			feedbackService,
+			log,
+		)
+
+		str := func(s string) *string {
+			return &s
+		}
+
+		assignmentID := uuid.New()
+		fileID := uuid.New()
+		comment := "Test submission"
+		fileIDStr := fileID.String()
+		expectedSubmission := &domain.Submission{
+			ID:           uuid.New(),
+			AssignmentID: assignmentID,
+			Comment:      str(comment),
+			FileID:       &fileID,
+			CreatedAt:    time.Now(),
+			EditedAt:     time.Now(),
+		}
+
+		submissionService.On("CreateSubmission", ctx, mock.AnythingOfType("*domain.Submission")).
+			Return(expectedSubmission, nil)
+
+		resp, err := h.CreateSubmission(ctx, &v1.CreateSubmissionRequest{
+			AssignmentId: assignmentID.String(),
+			Comment:      str(comment),
+			FileId:       &fileIDStr,
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedSubmission.ID.String(), resp.Id)
+		assert.Equal(t, comment, resp.Comment)
+		assert.Equal(t, fileID.String(), *resp.FileId)
+	})
+
+	t.Run("CreateFeedback - success", func(t *testing.T) {
+		assignmentService := &MockAssignmentService{}
+		submissionService := &MockSubmissionService{}
+		feedbackService := &MockFeedbackService{}
+
+		h := handler.NewHomeworkHandler(
+			assignmentService,
+			submissionService,
+			feedbackService,
+			log,
+		)
+
+		submissionID := uuid.New()
+		fileID := uuid.New()
+		comment := "Test feedback"
+		fileIDStr := fileID.String()
+		expectedFeedback := &domain.Feedback{
+			ID:           uuid.New(),
+			SubmissionID: submissionID,
+			Comment:      str(comment),
+			FileID:       &fileID,
+			CreatedAt:    time.Now(),
+			EditedAt:     time.Now(),
+		}
+
+		feedbackService.On("CreateFeedback", ctx, mock.AnythingOfType("*domain.Feedback")).
+			Return(expectedFeedback, nil)
+
+		resp, err := h.CreateFeedback(ctx, &v1.CreateFeedbackRequest{
+			SubmissionId: submissionID.String(),
+			Comment:      str(comment),
+			FileId:       &fileIDStr,
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedFeedback.ID.String(), resp.Id)
+		assert.Equal(t, comment, resp.Comment)
+		assert.Equal(t, fileID.String(), *resp.FileId)
+	})
+
+	t.Run("GetAssignmentFileURL - success", func(t *testing.T) {
+		assignmentService := &MockAssignmentService{}
+		submissionService := &MockSubmissionService{}
+		feedbackService := &MockFeedbackService{}
+
+		h := handler.NewHomeworkHandler(
+			assignmentService,
+			submissionService,
+			feedbackService,
+			log,
+		)
+
+		assignmentID := uuid.New()
+		fileURL := "http://example.com/file.pdf"
+		assignmentService.On("GetAssignmentFileURL", ctx, assignmentID).
+			Return(fileURL, nil)
+
+		resp, err := h.GetAssignmentFile(ctx, &v1.GetAssignmentFileRequest{
+			AssignmentId: assignmentID.String(),
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, fileURL, resp.Url)
+	})
 }

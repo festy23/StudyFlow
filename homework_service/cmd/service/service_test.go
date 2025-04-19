@@ -9,8 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"homework_service/internal/server/homework_grpc"
+	configs "homework_service/config"
 	"homework_service/pkg/logger"
+
+	"google.golang.org/grpc"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -36,14 +38,26 @@ func (m *MockUserClient) GetUserRole(ctx context.Context, userID string) (string
 }
 
 func TestMainFunction(t *testing.T) {
-	cfg := &Config{}
-	cfg.GRPC.Address = ":50052"
-	cfg.Services.User = "http://mock-user-service"
-	cfg.Services.File = "http://mock-file-service"
-	grpcServer := grpc.NewServer(grpc.Config{Address: cfg.GRPC.Address}, nil)
+	cfg := &configs.Config{
+		GRPC: configs.GRPCConfig{
+			Address: ":50052",
+			Timeout: 30 * time.Second,
+		},
+		Services: configs.Services{
+			UserService: configs.ServiceConfig{
+				Address: "http://mock-user-service",
+			},
+			FileService: configs.ServiceConfig{
+				Address: "http://mock-file-service",
+			},
+		},
+	}
+
+	log := logger.New()
+
+	grpcServer := grpc.NewServer()
+
 	go func() {
-		log := logger.New()
-		grpcServer := grpc.NewServer(grpc.Config{Address: cfg.GRPC.Address}, nil)
 		listener, err := net.Listen("tcp", cfg.GRPC.Address)
 		if err != nil {
 			log.Fatalf("Failed to listen: %v", err)
@@ -55,6 +69,7 @@ func TestMainFunction(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	quit <- syscall.SIGINT

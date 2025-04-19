@@ -2,71 +2,97 @@ package app_test
 
 import (
 	"context"
-	"homework_service/internal/app"
-	"net/http"
-	"net/http/httptest"
 	"testing"
+	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"homework_service/internal/app"
 )
 
-func TestUserClient(t *testing.T) {
-	t.Run("UserExists - success", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-		}))
-		defer ts.Close()
-
-		client := app.NewUserClient(ts.URL)
-		exists := client.UserExists(context.Background(), "user1")
-		require.True(t, exists)
-	})
-
-	t.Run("GetUserRole - success", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{"role": "tutor"}`))
-		}))
-		defer ts.Close()
-
-		client := app.NewUserClient(ts.URL)
-		role, err := client.GetUserRole(context.Background(), "user1")
-		require.NoError(t, err)
-		require.Equal(t, "tutor", role)
-	})
-
-	t.Run("IsPair - success", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-		}))
-		defer ts.Close()
-
-		client := app.NewUserClient(ts.URL)
-		isPair := client.IsPair(context.Background(), "tutor1", "student1")
-		require.True(t, isPair)
-	})
+type IntegrationTestSuite struct {
+	suite.Suite
+	fileClient *app.FileClient
+	userClient *app.UserClient
+	conn       *grpc.ClientConn
 }
 
-func TestFileClient(t *testing.T) {
-	t.Run("FileExists - success", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-		}))
-		defer ts.Close()
+func (s *IntegrationTestSuite) SetupSuite() {
+	// Инициализация соединения
+	var err error
 
-		client := app.NewFileClient(ts.URL)
-		exists := client.FileExists(context.Background(), "file1")
-		require.True(t, exists)
-	})
+	fileConn, err := grpc.Dial(
+		"localhost:50051", //адрес FileService
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+		grpc.WithTimeout(5*time.Second),
+	)
+	if err != nil {
+		s.T().Fatalf("failed to connect to FileService: %v", err)
+	}
 
-	t.Run("GetFileURL - success", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{"url": "http://example.com/file1"}`))
-		}))
-		defer ts.Close()
+	userConn, err := grpc.Dial(
+		"localhost:50052", //адрес UserService
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+		grpc.WithTimeout(5*time.Second),
+	)
+	if err != nil {
+		s.T().Fatalf("failed to connect to UserService: %v", err)
+	}
 
-		client := app.NewFileClient(ts.URL)
-		url, err := client.GetFileURL(context.Background(), "file1", "user1")
-		require.NoError(t, err)
-		require.Equal(t, "http://example.com/file1", url)
-	})
+	s.conn = fileConn
+	s.fileClient = app.NewFileClient(fileConn)
+	s.userClient = app.NewUserClient(userConn)
+}
+
+func (s *IntegrationTestSuite) TearDownSuite() {
+	if s.conn != nil {
+		s.conn.Close()
+	}
+}
+
+func (s *IntegrationTestSuite) TestFileClientIntegration() {
+	t := s.T()
+
+	fileID := uuid.MustParse("a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8") //нужен реальный ID
+
+	ctx := context.Background()
+	url, err := s.fileClient.GetFileURL(ctx, fileID)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, url)
+	assert.Contains(t, url, "http") //проверка формата URL
+}
+
+func (s *IntegrationTestSuite) TestUserClientIntegration() {
+	t := s.T()
+
+	tutorID := uuid.MustParse("f47ac10b-58cc-4372-a567-0e02b2c3d479")   //нужен реальный ID
+	studentID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000") //нужен реальный ID
+
+	ctx := context.Background()
+
+	isPair, err := s.userClient.IsPair(ctx, tutorID, studentID)
+
+	assert.NoError(t, err)
+	assert.True(t, isPair)
+
+	randomTutorID := uuid.New()
+	randomStudentID := uuid.New()
+	isPair, err = s.userClient.IsPair(ctx, randomTutorID, randomStudentID)
+
+	assert.NoError(t, err)
+	assert.False(t, isPair)
+}
+
+func TestIntegrationSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	suite.Run(t, new(IntegrationTestSuite))
 }
