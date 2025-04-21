@@ -21,10 +21,10 @@ type ScheduleServer struct {
 	UserClient *UserClient
 }
 
-func NewScheduleServer(db repo.Repository) *ScheduleServer {
+func NewScheduleServer(db repo.Repository, client *UserClient) *ScheduleServer {
 	return &ScheduleServer{
 		db:         db,
-		UserClient: &UserClient{},
+		UserClient: client,
 	}
 }
 

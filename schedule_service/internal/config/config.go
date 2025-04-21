@@ -13,6 +13,7 @@ type Config struct {
 	PostgresMaxConn     int    `env:"POSTGRES_MAX_CONN" env-default:"5"`
 	PostgresMinConn     int    `env:"POSTGRES_MIN_CONN" env-default:"1"`
 	PostgresAutoMigrate bool   `env:"POSTGRES_AUTO_MIGRATE" env-default:"false"`
+	UserClientDNS       string `env:"USER_CLIENT_DNS" env-required:"true"`
 }
 
 var (
