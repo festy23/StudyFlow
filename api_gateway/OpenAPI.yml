@@ -26,20 +26,20 @@ components:
           type: string
         role:
           $ref: '#/components/schemas/UserRole'
-        auth_provider:
+        authProvider:
           type: string
         status:
           $ref: '#/components/schemas/UserStatus'
-        first_name:
+        firstName:
           type: string
-        last_name:
+        lastName:
           type: string
         timezone:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     UserPublic:
@@ -49,27 +49,27 @@ components:
           type: string
         role:
           $ref: '#/components/schemas/UserRole'
-        first_name:
+        firstName:
           type: string
-        last_name:
+        lastName:
           type: string
     TutorProfile:
       type: object
       properties:
         id:
           type: string
-        user_id:
+        userId:
           type: string
-        payment_info:
+        paymentInfo:
           type: string
-        lesson_price_rub:
+        lessonPriceRub:
           type: integer
-        lesson_connection_link:
+        lessonConnectionLink:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     TutorStudent:
@@ -77,20 +77,20 @@ components:
       properties:
         id:
           type: string
-        tutor_id:
+        tutorId:
           type: string
-        student_id:
+        studentId:
           type: string
-        lesson_price_rub:
+        lessonPriceRub:
           type: integer
-        lesson_connection_link:
+        lessonConnectionLink:
           type: string
         status:
           $ref: '#/components/schemas/TutorStudentStatus'
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     Error:
@@ -104,9 +104,9 @@ components:
     InitUploadResponse:
       type: object
       properties:
-        file_id:
+        fileId:
           type: string
-        upload_url:
+        uploadUrl:
           type: string
         method:
           type: string
@@ -117,7 +117,7 @@ components:
           type: string
         extension:
           type: string
-        uploaded_by:
+        uploadedBy:
           type: string
         filename:
           type: string
@@ -129,20 +129,20 @@ components:
       properties:
         id:
           type: string
-        tutor_id:
+        tutorId:
           type: string
-        starts_at:
-          type: string
-          format: date-time
-        ends_at:
+        startsAt:
           type: string
           format: date-time
-        is_booked:
+        endsAt:
+          type: string
+          format: date-time
+        isBooked:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     Lesson:
@@ -150,24 +150,24 @@ components:
       properties:
         id:
           type: string
-        slot_id:
+        slotId:
           type: string
-        student_id:
+        studentId:
           type: string
         status:
           $ref: '#/components/schemas/LessonStatus'
-        is_paid:
+        isPaid:
           type: boolean
-        connection_link:
+        connectionLink:
           type: string
-        price_rub:
+        priceRub:
           type: integer
-        payment_info:
+        paymentInfo:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     LessonStatus:
@@ -181,27 +181,27 @@ components:
     PaymentInfo:
       type: object
       properties:
-        lesson_id:
+        lessonId:
           type: string
-        price_rub:
+        priceRub:
           type: integer
-        payment_info:
+        paymentInfo:
           type: string
     Receipt:
       type: object
       properties:
         id:
           type: string
-        lesson_id:
+        lessonId:
           type: string
-        file_id:
+        fileId:
           type: string
-        is_verified:
+        isVerified:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     ReceiptFileURL:
@@ -218,23 +218,23 @@ components:
       properties:
         id:
           type: string
-        tutor_id:
+        tutorId:
           type: string
-        student_id:
+        studentId:
           type: string
         title:
           type: string
         description:
           type: string
-        file_id:
+        fileId:
           type: string
-        due_date:
-          type: string
-          format: date-time
-        created_at:
+        dueDate:
           type: string
           format: date-time
-        edited_at:
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
           type: string
           format: date-time
     Submission:
@@ -242,19 +242,19 @@ components:
       properties:
         id:
           type: string
-        assignment_id:
+        assignmentId:
           type: string
-        file_id:
+        fileId:
           type: string
         comment:
           type: string
-        submitted_at:
+        submittedAt:
           type: string
           format: date-time
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     Feedback:
@@ -262,16 +262,16 @@ components:
       properties:
         id:
           type: string
-        submission_id:
+        submissionId:
           type: string
-        file_id:
+        fileId:
           type: string
         comment:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        edited_at:
+        editedAt:
           type: string
           format: date-time
     HomeworkFileURL:
@@ -301,16 +301,16 @@ paths:
             schema:
               type: object
               properties:
-                telegram_id:
+                telegramId:
                   type: integer
                   format: int64
                 role:
                   $ref: '#/components/schemas/UserRole'
                 username:
                   type: string
-                first_name:
+                firstName:
                   type: string
-                last_name:
+                lastName:
                   type: string
                 timezone:
                   type: string
@@ -386,9 +386,9 @@ paths:
             schema:
               type: object
               properties:
-                first_name:
+                firstName:
                   type: string
-                last_name:
+                lastName:
                   type: string
                 timezone:
                   type: string
@@ -458,11 +458,11 @@ paths:
             schema:
               type: object
               properties:
-                payment_info:
+                paymentInfo:
                   type: string
-                lesson_price_rub:
+                lessonPriceRub:
                   type: integer
-                lesson_connection_link:
+                lessonConnectionLink:
                   type: string
       responses:
         '200':
@@ -602,9 +602,9 @@ paths:
             schema:
               type: object
               properties:
-                lesson_price_rub:
+                lessonPriceRub:
                   type: integer
-                lesson_connection_link:
+                lessonConnectionLink:
                   type: string
                 status:
                   $ref: '#/components/schemas/TutorStudentStatus'
@@ -669,13 +669,13 @@ paths:
             schema:
               type: object
               properties:
-                tutor_id:
+                tutorId:
                   type: string
-                student_id:
+                studentId:
                   type: string
-                lesson_price_rub:
+                lessonPriceRub:
                   type: integer
-                lesson_connection_link:
+                lessonConnectionLink:
                   type: string
               required:
                 - tutor_id
@@ -719,7 +719,7 @@ paths:
             schema:
               type: object
               properties:
-                uploaded_by:
+                uploadedBy:
                   type: string
                 filename:
                   type: string
@@ -776,12 +776,12 @@ paths:
             schema:
               type: object
               properties:
-                tutor_id:
+                tutorId:
                   type: string
-                starts_at:
+                startsAt:
                   type: string
                   format: date-time
-                ends_at:
+                endsAt:
                   type: string
                   format: date-time
               required:
@@ -852,10 +852,10 @@ paths:
             schema:
               type: object
               properties:
-                starts_at:
+                startsAt:
                   type: string
                   format: date-time
-                ends_at:
+                endsAt:
                   type: string
                   format: date-time
       responses:
@@ -1004,9 +1004,9 @@ paths:
             schema:
               type: object
               properties:
-                slot_id:
+                slotId:
                   type: string
-                student_id:
+                studentId:
                   type: string
               required:
                 - slot_id
@@ -1093,11 +1093,11 @@ paths:
             schema:
               type: object
               properties:
-                connection_link:
+                connectionLink:
                   type: string
-                price_rub:
+                priceRub:
                   type: integer
-                payment_info:
+                paymentInfo:
                   type: string
       responses:
         '200':
@@ -1190,9 +1190,9 @@ paths:
             schema:
               type: object
               properties:
-                lesson_id:
+                lessonId:
                   type: string
-                file_id:
+                fileId:
                   type: string
               required:
                 - lesson_id
@@ -1329,17 +1329,17 @@ paths:
             schema:
               type: object
               properties:
-                tutor_id:
+                tutorId:
                   type: string
-                student_id:
+                studentId:
                   type: string
                 title:
                   type: string
                 description:
                   type: string
-                file_id:
+                fileId:
                   type: string
-                due_date:
+                dueDate:
                   type: string
                   format: date-time
               required:
@@ -1433,9 +1433,9 @@ paths:
                   type: string
                 description:
                   type: string
-                file_id:
+                fileId:
                   type: string
-                due_date:
+                dueDate:
                   type: string
                   format: date-time
       responses:
@@ -1596,9 +1596,9 @@ paths:
             schema:
               type: object
               properties:
-                assignment_id:
+                assignmentId:
                   type: string
-                file_id:
+                fileId:
                   type: string
                 comment:
                   type: string
@@ -1670,9 +1670,9 @@ paths:
             schema:
               type: object
               properties:
-                submission_id:
+                submissionId:
                   type: string
-                file_id:
+                fileId:
                   type: string
                 comment:
                   type: string
@@ -1721,7 +1721,7 @@ paths:
             schema:
               type: object
               properties:
-                file_id:
+                fileId:
                   type: string
                 comment:
                   type: string
