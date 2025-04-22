@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -26,6 +28,12 @@ func GetConfig() *Config {
 		cfg = &Config{}
 		// .env должен быть в корне (на одном уровне с go.mod)
 		if err := cleanenv.ReadConfig(".env", cfg); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				if err := cleanenv.ReadEnv(cfg); err != nil {
+					log.Fatalf("failed to read config: %v", err)
+				}
+				return
+			}
 			help, _ := cleanenv.GetDescription(cfg, nil)
 			log.Printf("Config help:\n%s", help)
 			log.Fatalf("failed to read config: %v", err)

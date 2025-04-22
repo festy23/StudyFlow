@@ -19,8 +19,8 @@ kafka:
 
 services:
   user_service:
-    address: "user-service:50052"
+    address: "user-service:50051"
     timeout: 10s
   file_service:
-    address: "file-service:50053"
+    address: "file-service:50052"
     timeout: 10s

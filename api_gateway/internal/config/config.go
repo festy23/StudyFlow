@@ -11,7 +11,7 @@ type Config struct {
 	UserServiceURL     string `env:"USER_CLIENT_URL"`
 	FileServiceURL     string `env:"FILE_SERVICE_URL"`
 	ScheduleServiceURL string `env:"SCHEDULE_SERVICE_URL"`
-	HomeworkServiceURL string `env:"HOME_WORK_SERVICE_URL"`
+	HomeworkServiceURL string `env:"HOMEWORK_SERVICE_URL"`
 	PaymentServiceURL  string `env:"PAYMENT_SERVICE_URL"`
 }
 
