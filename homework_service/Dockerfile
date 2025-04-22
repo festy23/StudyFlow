@@ -18,6 +18,7 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /server ./
 COPY --from=builder /app/config ./config/
+COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 50051
-CMD ["/server"]
+CMD ["./server"]

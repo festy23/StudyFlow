@@ -1,0 +1,194 @@
+services:
+  minio:
+    image: quay.io/minio/minio
+    expose:
+      - "9000"
+      - "9001"
+
+    environment:
+      MINIO_ROOT_USER: ROOTUSER
+      MINIO_ROOT_PASSWORD: PASSWORD
+
+    command: server /data --console-address ":9001"
+
+    volumes:
+      - minio_data:/data
+
+  user-db:
+    image: postgres:latest
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - user-db:/data/postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  file-db:
+    image: postgres:latest
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - file-db:/data/postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  homework-db:
+    image: postgres:latest
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - homework-db:/data/postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  payment-db:
+    image: postgres:latest
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - payment-db:/data/postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  schedule-db:
+    image: postgres:latest
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - schedule-db:/data/postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: ./user_service/Dockerfile
+    expose:
+      - "50051"
+    env_file:
+      - ./user_service/config/.env
+    environment:
+      GRPC_PORT: 50051
+      POSTGRES_URL: postgres://postgres:postgres@user-db:5432/postgres?sslmode=disable
+      POSTGRES_MAX_CONN: 5
+      POSTGRES_MIN_CONN: 1
+      POSTGRES_AUTO_MIGRATE: true
+      TELEGRAM_SECRET: ${TELEGRAM_SECRET}
+
+  file-service:
+    build:
+      context: .
+      dockerfile: ./file_service/Dockerfile
+    expose:
+      - "50051"
+    env_file:
+      - ./file_service/config/.env
+    environment:
+      GRPC_PORT: 50051
+      POSTGRES_URL: postgres://postgres:postgres@file-db:5432/postgres?sslmode=disable
+      POSTGRES_MAX_CONN: 5
+      POSTGRES_MIN_CONN: 1
+      POSTGRES_AUTO_MIGRATE: true
+      S3_ACCESS_KEY_ID: ROOTUSER
+      S3_SECRET_ACCESS_KEY: PASSWORD
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+
+  homework-service:
+    build:
+      context: .
+      dockerfile: ./homework_service/Dockerfile
+    expose:
+      - "50051"
+    environment:
+      GRPC_ADDRESS: :50051
+      DB_HOST: homework-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+      DB_SSL_MODE: disable
+      POSTGRES_MAX_CONN: 5
+      POSTGRES_MIN_CONN: 1
+      USER_SERVICE_ADDRESS: "user-service:50051"
+      FILE_SERVICE_ADDRESS: "file-service:50051"
+
+#  payment-service:
+#    build:
+#      context: .
+#      dockerfile: ./payment_service/Dockerfile
+#    ports:
+#      - "50054:50051"
+#    env_file:
+#      - ./payment_service/config/.env
+
+  schedule-service:
+    build:
+      context: .
+      dockerfile: ./schedule_service/Dockerfile
+    expose:
+      - "50051"
+    env_file:
+      - ./schedule_service/.env
+    environment:
+      GRPC_PORT: 50051
+      POSTGRES_URL: postgres://postgres:postgres@schedule-db:5432/postgres?sslmode=disable
+      POSTGRES_MAX_CONN: 5
+      POSTGRES_MIN_CONN: 1
+      POSTGRES_AUTO_MIGRATE: true
+      USER_CLIENT_DNS: "user-service:50051"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./api_gateway/Dockerfile
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    environment:
+      HTTP_PORT: 8080
+      USER_CLIENT_URL: "user-service:50051"
+      FILE_SERVICE_URL: "file-service:50051"
+      SCHEDULE_SERVICE_URL: "schedule-service:50051"
+      HOMEWORK_SERVICE_URL: "homework-service:50051"
+      PAYMENT_SERVICE_URL: "payment-service:50051"
+
+
+volumes:
+  minio_data:
+  user-db:
+  file-db:
+  homework-db:
+  payment-db:
+  schedule-db:
