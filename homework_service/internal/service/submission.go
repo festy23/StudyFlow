@@ -1,47 +1,48 @@
 package service
 
 import (
+	"common_library/ctxdata"
 	"context"
-	"errors"
+	"github.com/google/uuid"
 
-	"homework_service/internal/app"
 	"homework_service/internal/domain"
 	"homework_service/internal/repository"
 )
 
-var (
-	ErrInvalidSubmission = errors.New("invalid submission data")
-)
+type SubmissionServiceInterface interface {
+	CreateSubmission(ctx context.Context, submission *domain.Submission) (*domain.Submission, error)
+	GetSubmission(ctx context.Context, id uuid.UUID) (*domain.Submission, error)
+	ListSubmissionsByAssignment(ctx context.Context, assignmentID uuid.UUID) ([]*domain.Submission, error)
+	GetSubmissionFileURL(ctx context.Context, id uuid.UUID) (string, error)
+}
 
-type SubmissionService struct {
+type submissionService struct {
 	submissionRepo *repository.SubmissionRepository
 	assignmentRepo *repository.AssignmentRepository
-	fileClient     *app.FileClient
+	fileClient     FileClient
 }
 
 func NewSubmissionService(
 	submissionRepo *repository.SubmissionRepository,
 	assignmentRepo *repository.AssignmentRepository,
-	fileClient *app.FileClient,
-) *SubmissionService {
-	return &SubmissionService{
+	fileClient FileClient,
+) SubmissionServiceInterface {
+	return &submissionService{
 		submissionRepo: submissionRepo,
 		assignmentRepo: assignmentRepo,
 		fileClient:     fileClient,
 	}
 }
 
-func (s *SubmissionService) CreateSubmission(ctx context.Context, submission *domain.Submission) (*domain.Submission, error) {
-	if submission.AssignmentID == "" || submission.StudentID == "" || submission.FileID == "" {
-		return nil, ErrInvalidSubmission
-	}
-
-	if _, err := s.fileClient.GetFile(ctx, submission.FileID); err != nil {
+func (s *submissionService) CreateSubmission(ctx context.Context, submission *domain.Submission) (*domain.Submission, error) {
+	assignment, err := s.assignmentRepo.GetByID(ctx, submission.AssignmentID)
+	if err != nil {
 		return nil, err
 	}
 
-	if _, err := s.assignmentRepo.GetByID(ctx, submission.AssignmentID); err != nil {
-		return nil, err
+	userId, ok := ctxdata.GetUserID(ctx)
+	if !ok || userId != assignment.StudentID.String() {
+		return nil, ErrPermissionDenied
 	}
 
 	if err := s.submissionRepo.Create(ctx, submission); err != nil {
@@ -51,10 +52,62 @@ func (s *SubmissionService) CreateSubmission(ctx context.Context, submission *do
 	return submission, nil
 }
 
-func (s *SubmissionService) GetSubmission(ctx context.Context, id string) (*domain.Submission, error) {
-	return s.submissionRepo.GetByID(ctx, id)
+func (s *submissionService) GetSubmission(ctx context.Context, id uuid.UUID) (*domain.Submission, error) {
+	submission, err := s.submissionRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment, err := s.assignmentRepo.GetByID(ctx, submission.AssignmentID)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, ok := ctxdata.GetUserID(ctx)
+	if !ok || (userId != assignment.StudentID.String() && userId != assignment.TutorID.String()) {
+		return nil, ErrPermissionDenied
+	}
+
+	return submission, nil
 }
 
-func (s *SubmissionService) ListSubmissions(ctx context.Context, filter domain.SubmissionFilter) ([]*domain.Submission, error) {
-	return s.submissionRepo.ListByFilter(ctx, filter)
+func (s *submissionService) ListSubmissionsByAssignment(ctx context.Context, assignmentID uuid.UUID) ([]*domain.Submission, error) {
+	assignment, err := s.assignmentRepo.GetByID(ctx, assignmentID)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, ok := ctxdata.GetUserID(ctx)
+	if !ok || (userId != assignment.StudentID.String() && userId != assignment.TutorID.String()) {
+		return nil, ErrPermissionDenied
+	}
+
+	return s.submissionRepo.ListByAssignment(ctx, assignmentID)
+}
+
+func (s *submissionService) GetSubmissionFileURL(ctx context.Context, id uuid.UUID) (string, error) {
+	submission, err := s.submissionRepo.GetByID(ctx, id)
+	if err != nil {
+		return "", err
+	}
+
+	assignment, err := s.assignmentRepo.GetByID(ctx, submission.AssignmentID)
+	if err != nil {
+		return "", err
+	}
+
+	userId, ok := ctxdata.GetUserID(ctx)
+	if !ok || (userId != assignment.StudentID.String() && userId != assignment.TutorID.String()) {
+		return "", ErrPermissionDenied
+	}
+
+	if submission.FileID == nil {
+		return "", ErrFileNotFound
+	}
+
+	url, err := s.fileClient.GetFileURL(ctx, *submission.FileID)
+	if err != nil {
+		return "", err
+	}
+	return url, nil
 }

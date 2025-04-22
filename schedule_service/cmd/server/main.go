@@ -43,8 +43,12 @@ func main() {
 	if err != nil {
 		logger.Fatal(ctx, "cannot create db", zap.Error(err))
 	}
+	userClient, err := service.NewUserClient(cfg.UserClientDNS)
+	if err != nil {
+		logger.Fatal(ctx, "failed to create UserClient")
+	}
 
-	schedule_service := service.NewScheduleServer(database)
+	schedule_service := service.NewScheduleServer(database, userClient)
 	if err != nil {
 		logger.Fatal(ctx, "cannot create schedule_service", zap.Error(err))
 	}
@@ -60,10 +64,11 @@ func main() {
 			logging.NewUnaryLoggingInterceptor(logger),
 		)),
 	)
-
+	database.RegisterHealthService(server) //readiness probe
 	pb.RegisterScheduleServiceServer(server, schedule_service)
 
-	logger.Info(ctx, "Starting gRPC server...", zap.String("port", cfg.GRPCPort))
+	logger.Info(ctx, "Starting gRPC server...", zap.String("port", cfg.GRPCPort),
+		zap.String("user_service_addr", cfg.UserClientDNS))
 	go func() {
 		if err := server.Serve(listener); err != nil {
 			logger.Fatal(ctx, "failed to serve", zap.Error(err))
@@ -73,6 +78,8 @@ func main() {
 	select {
 	case <-ctx.Done():
 		server.GracefulStop()
+		database.Close()
+		userClient.Close()
 		logger.Info(ctx, "Server Stopped")
 
 	}

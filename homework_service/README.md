@@ -1,4 +1,4 @@
-# homework-service
+# homework_service
 
 ## Описание
 
@@ -40,7 +40,7 @@ gRPC-сервис, обрабатывающий назначение, выпол
 
 ## Описание gRPC методов
 
-(подробнее со всеми request/response message смотрите в proto файле)
+(подробнее со всеми request/response message смотрите в proto файле) 
 
 ### CreateAssignment
 Возможные ошибки:

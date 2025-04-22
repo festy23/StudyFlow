@@ -5,24 +5,26 @@ import (
 	"errors"
 	"time"
 
+	"common_library/ctxdata"
+	"schedule_service/internal/database/repo"
+	pb "schedule_service/pkg/api"
+
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"common_library/ctxdata"
-	"schedule_service/internal/database/repo"
-	pb "schedule_service/pkg/api"
 )
 
 type ScheduleServer struct {
 	pb.UnimplementedScheduleServiceServer
-	db repo.Repository
+	db         repo.Repository
+	UserClient *UserClient
 }
 
-func NewScheduleServer(db repo.Repository) *ScheduleServer {
+func NewScheduleServer(db repo.Repository, client *UserClient) *ScheduleServer {
 	return &ScheduleServer{
-		db: db,
+		db:         db,
+		UserClient: client,
 	}
 }
 
@@ -30,6 +32,10 @@ func (s *ScheduleServer) GetSlot(ctx context.Context, req *pb.GetSlotRequest) (*
 	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
+	}
+
+	if err := uuid.Validate(req.Id); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
 	slot, err := s.db.GetSlot(ctx, req.Id)
@@ -41,13 +47,12 @@ func (s *ScheduleServer) GetSlot(ctx context.Context, req *pb.GetSlotRequest) (*
 	}
 
 	if slot.TutorID != userID {
-		isValidPair, err := ValidateTutorStudentPair(ctx, slot.TutorID, userID)
+		isValidPair, err := s.ValidateTutorStudentPair(ctx, slot.TutorID, userID)
 		if err != nil || !isValidPair {
 			return nil, status.Error(codes.PermissionDenied, "permission denied")
 		}
 	}
-
-	return &pb.Slot{
+	Pbslot := &pb.Slot{
 		Id:        slot.ID,
 		TutorId:   slot.TutorID,
 		StartsAt:  timestamppb.New(slot.StartsAt),
@@ -55,7 +60,15 @@ func (s *ScheduleServer) GetSlot(ctx context.Context, req *pb.GetSlotRequest) (*
 		IsBooked:  slot.IsBooked,
 		CreatedAt: timestamppb.New(slot.CreatedAt),
 		EditedAt:  timestamppb.New(*slot.EditedAt),
-	}, nil
+	}
+	if Pbslot.EditedAt != nil {
+		Pbslot.EditedAt = timestamppb.New(*slot.EditedAt)
+	} else {
+		Pbslot.EditedAt = Pbslot.CreatedAt
+	}
+
+	return Pbslot, nil
+
 }
 
 func (s *ScheduleServer) CreateSlot(ctx context.Context, req *pb.CreateSlotRequest) (*pb.Slot, error) {
@@ -63,8 +76,12 @@ func (s *ScheduleServer) CreateSlot(ctx context.Context, req *pb.CreateSlotReque
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
+	if err := uuid.Validate(userID); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
 
 	isTutor, err := IsTutor(ctx, userID)
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to verify tutor status")
 	}
@@ -117,6 +134,10 @@ func (s *ScheduleServer) UpdateSlot(ctx context.Context, req *pb.UpdateSlotReque
 	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
+	}
+
+	if err := uuid.Validate(req.Id); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
 	existingSlot, err := s.db.GetSlot(ctx, req.Id)
@@ -172,6 +193,10 @@ func (s *ScheduleServer) DeleteSlot(ctx context.Context, req *pb.DeleteSlotReque
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
 
+	if err := uuid.Validate(req.Id); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
+
 	existingSlot, err := s.db.GetSlot(ctx, req.Id)
 	if err != nil {
 		if errors.Is(err, ErrSlotNotFound) {
@@ -201,8 +226,12 @@ func (s *ScheduleServer) ListSlotsByTutor(ctx context.Context, req *pb.ListSlots
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
 
+	if err := uuid.Validate(req.TutorId); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid TutorID")
+	}
+
 	if req.TutorId != userID {
-		isValidPair, err := ValidateTutorStudentPair(ctx, req.TutorId, userID)
+		isValidPair, err := s.ValidateTutorStudentPair(ctx, req.TutorId, userID)
 		if err != nil || !isValidPair {
 			return nil, status.Error(codes.PermissionDenied, "permission denied")
 		}
@@ -246,6 +275,9 @@ func (s *ScheduleServer) GetLesson(ctx context.Context, req *pb.GetLessonRequest
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
+	if err := uuid.Validate(req.Id); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
 
 	lesson, err := s.db.GetLesson(ctx, req.Id)
 	if err != nil {
@@ -272,6 +304,12 @@ func (s *ScheduleServer) CreateLesson(ctx context.Context, req *pb.CreateLessonR
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
+	if err := uuid.Validate(req.SlotId); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
+	if err := uuid.Validate(req.StudentId); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
 
 	slot, err := s.db.GetSlot(ctx, req.SlotId)
 	if err != nil {
@@ -297,7 +335,7 @@ func (s *ScheduleServer) CreateLesson(ctx context.Context, req *pb.CreateLessonR
 		return nil, StatusPermissionDenied
 	}
 
-	isValidPair, err := ValidateTutorStudentPair(ctx, tutorID, studentID)
+	isValidPair, err := s.ValidateTutorStudentPair(ctx, tutorID, studentID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to validate tutor-student relationship")
 	}
@@ -337,6 +375,9 @@ func (s *ScheduleServer) UpdateLesson(ctx context.Context, req *pb.UpdateLessonR
 	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, StatusUnauthenticated
+	}
+	if err := uuid.Validate(req.Id); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
 	lesson, err := s.db.GetLesson(ctx, req.Id)
@@ -389,6 +430,9 @@ func (s *ScheduleServer) CancelLesson(ctx context.Context, req *pb.CancelLessonR
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
+	if err := uuid.Validate(req.Id); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
 
 	lesson, err := s.db.GetLesson(ctx, req.Id)
 	if err != nil {
@@ -422,6 +466,9 @@ func (s *ScheduleServer) ListLessonsByTutor(ctx context.Context, req *pb.ListLes
 	userID, ok := ctxdata.GetUserID(ctx)
 	if !ok {
 		return nil, StatusUnauthenticated
+	}
+	if err := uuid.Validate(req.TutorId); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
 	if req.TutorId != userID {
@@ -469,6 +516,9 @@ func (s *ScheduleServer) ListLessonsByStudent(ctx context.Context, req *pb.ListL
 			statusFilters = append(statusFilters, "completed")
 		}
 	}
+	if err := uuid.Validate(req.StudentId); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
 
 	lessons, err := s.db.ListLessonsByStudent(ctx, req.StudentId, statusFilters)
 	if err != nil {
@@ -488,7 +538,7 @@ func (s *ScheduleServer) ListLessonsByPair(ctx context.Context, req *pb.ListLess
 		return nil, StatusPermissionDenied
 	}
 
-	isValidPair, err := ValidateTutorStudentPair(ctx, req.TutorId, req.StudentId)
+	isValidPair, err := s.ValidateTutorStudentPair(ctx, req.TutorId, req.StudentId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to validate tutor-student relationship")
 	}
@@ -506,6 +556,12 @@ func (s *ScheduleServer) ListLessonsByPair(ctx context.Context, req *pb.ListLess
 		case pb.LessonStatusFilter_COMPLETED:
 			statusFilters = append(statusFilters, "completed")
 		}
+	}
+	if err := uuid.Validate(req.TutorId); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	}
+	if err := uuid.Validate(req.StudentId); err == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
 	lessons, err := s.db.ListLessonsByPair(ctx, req.TutorId, req.StudentId, statusFilters)

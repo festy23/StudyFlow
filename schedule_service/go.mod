@@ -4,7 +4,10 @@ go 1.24.0
 
 replace common_library => ../common_library
 
+replace userservice => ../user_service
+
 require (
+	userservice v0.0.0
 	common_library v0.0.0
 	github.com/google/uuid v1.6.0
 	google.golang.org/grpc v1.71.1
@@ -17,6 +20,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/pierrec/lz4/v4 v4.1.16 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
