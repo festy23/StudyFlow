@@ -20,11 +20,11 @@ func NewSubmissionRepository(db *sql.DB) *SubmissionRepository {
 
 func (r *SubmissionRepository) Create(ctx context.Context, submission *domain.Submission) error {
 	query := `
-		INSERT INTO submissions (id, assignment_id, student_id, file_id, comment, created_at, edited_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO submissions (id, assignment_id, file_id, comment, created_at, edited_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
-	id, err := uuid.NewRandom()
+	id, err := uuid.NewV7()
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,6 @@ func (r *SubmissionRepository) Create(ctx context.Context, submission *domain.Su
 	_, err = r.db.ExecContext(ctx, query,
 		id,
 		submission.AssignmentID,
-		submission.StudentID,
 		submission.FileID,
 		submission.Comment,
 		time.Now(),
@@ -43,13 +42,13 @@ func (r *SubmissionRepository) Create(ctx context.Context, submission *domain.Su
 		return err
 	}
 
-	submission.ID = id.String()
+	submission.ID = id
 	return nil
 }
 
-func (r *SubmissionRepository) GetByID(ctx context.Context, id string) (*domain.Submission, error) {
+func (r *SubmissionRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Submission, error) {
 	query := `
-		SELECT id, assignment_id, student_id, file_id, comment, created_at, edited_at
+		SELECT id, assignment_id, file_id, comment, created_at, edited_at
 		FROM submissions
 		WHERE id = $1
 	`
@@ -58,7 +57,6 @@ func (r *SubmissionRepository) GetByID(ctx context.Context, id string) (*domain.
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&submission.ID,
 		&submission.AssignmentID,
-		&submission.StudentID,
 		&submission.FileID,
 		&submission.Comment,
 		&submission.CreatedAt,
@@ -75,26 +73,25 @@ func (r *SubmissionRepository) GetByID(ctx context.Context, id string) (*domain.
 	return &submission, nil
 }
 
-func (r *SubmissionRepository) ListByFilter(ctx context.Context, filter domain.SubmissionFilter) ([]*domain.Submission, error) {
+func (r *SubmissionRepository) ListByAssignment(ctx context.Context, assignmentId uuid.UUID) ([]*domain.Submission, error) {
 	query := `
-		SELECT id, assignment_id, student_id, file_id, comment, created_at, edited_at
+		SELECT id, assignment_id, file_id, comment, created_at, edited_at
 		FROM submissions
-		WHERE assignment_id = $1 AND student_id = $2
+		WHERE assignment_id = $1
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, filter.AssignmentID, filter.StudentID)
+	rows, err := r.db.QueryContext(ctx, query, assignmentId)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
+	
 	var submissions []*domain.Submission
 	for rows.Next() {
 		var submission domain.Submission
 		err := rows.Scan(
 			&submission.ID,
 			&submission.AssignmentID,
-			&submission.StudentID,
 			&submission.FileID,
 			&submission.Comment,
 			&submission.CreatedAt,

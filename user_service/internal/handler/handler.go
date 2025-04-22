@@ -199,7 +199,7 @@ func (h *UserServiceServer) GetTutorStudent(ctx context.Context, req *pb.GetTuto
 
 	tutorStudent, err := h.service.GetTutorStudent(ctx, tutorId, studentId)
 	if err != nil {
-		return nil, mapError(err, errdefs.ErrNotFound, errdefs.ErrPermissionDenied)
+		return nil, mapError(err, errdefs.ErrNotFound, errdefs.ErrPermissionDenied, errdefs.AuthenticationErr)
 	}
 	return toPbTutorStudent(tutorStudent), nil
 }

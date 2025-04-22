@@ -2,6 +2,7 @@ package logging
 
 import (
 	"context"
+	"google.golang.org/grpc/metadata"
 	"time"
 
 	"go.uber.org/zap"
@@ -23,10 +24,18 @@ func NewUnaryLoggingInterceptor(logger *Logger) grpc.UnaryServerInterceptor {
 			clientIP = p.Addr.String()
 		}
 
-		logger.Info(ctx, "grpc unary request",
+		fields := []zap.Field{
 			zap.String("method", info.FullMethod),
 			zap.String("client_ip", clientIP),
 			zap.Any("request", req),
+		}
+
+		if md, ok := metadata.FromIncomingContext(ctx); ok {
+			fields = append(fields, zap.Any("metadata", md))
+		}
+
+		logger.Info(ctx, "grpc unary request",
+			fields...,
 		)
 
 		ctx = ContextWithLogger(ctx, logger)
@@ -35,7 +44,7 @@ func NewUnaryLoggingInterceptor(logger *Logger) grpc.UnaryServerInterceptor {
 
 		duration := time.Since(start)
 
-		fields := []zap.Field{
+		fields = []zap.Field{
 			zap.String("method", info.FullMethod),
 			zap.Duration("duration", duration),
 		}
