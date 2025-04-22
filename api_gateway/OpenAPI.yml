@@ -1704,12 +1704,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /homework/feedbacks/{submission_id}:
+  /homework/feedbacks/{id}:
     patch:
       summary: Update feedback
       operationId: updateFeedback
       parameters:
-        - name: submission_id
+        - name: id
           in: path
           required: true
           schema:

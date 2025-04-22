@@ -4,6 +4,8 @@ import (
 	"common_library/logging"
 	"context"
 	"errors"
+	"fmt"
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -116,4 +118,12 @@ func Handle[Req any, Resp any](
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
 	}, nil
+}
+
+func parsePathParam(r *http.Request, key string) (string, error) {
+	val := chi.URLParam(r, key)
+	if val == "" {
+		return "", fmt.Errorf("missing path param: %s", key)
+	}
+	return val, nil
 }

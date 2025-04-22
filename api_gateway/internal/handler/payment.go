@@ -29,14 +29,6 @@ func (h *PaymentHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.H
 	})
 }
 
-func parsePathParam(r *http.Request, key string) (string, error) {
-	val := chi.URLParam(r, key)
-	if val == "" {
-		return "", fmt.Errorf("missing path param: %s", key)
-	}
-	return val, nil
-}
-
 func parseGetPaymentInfo(ctx context.Context, r *http.Request, req *paymentpb.GetPaymentInfoRequest) error {
 	id, err := parsePathParam(r, "lesson_id")
 	if err != nil {

@@ -33,18 +33,10 @@ func (h *HomeworkHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.
 			r.Get("/submissions/{submission_id}/file-url", h.GetSubmissionFile)
 
 			r.Post("/feedbacks", h.CreateFeedback)
-			r.Patch("/feedbacks/{submission_id}", h.UpdateFeedback)
+			r.Patch("/feedbacks/{id}", h.UpdateFeedback)
 			r.Get("/feedbacks/{feedback_id}/file-url", h.GetFeedbackFile)
 		})
 	})
-}
-
-func parsePathParam(r *http.Request, name string) (string, error) {
-	val := chi.URLParam(r, name)
-	if val == "" {
-		return "", fmt.Errorf("missing path param: %s", name)
-	}
-	return val, nil
 }
 
 func parseAssignmentID(ctx context.Context, r *http.Request, req *homeworkpb.GetAssignmentFileRequest) error {
@@ -130,13 +122,13 @@ func (h *HomeworkHandler) ListAssignments(w http.ResponseWriter, r *http.Request
 
 	switch x := req.(type) {
 	case *homeworkpb.ListAssignmentsByTutorRequest:
-		handler, _ := Handle[*homeworkpb.ListAssignmentsByTutorRequest, homeworkpb.ListAssignmentsResponse](h.c.ListAssignmentsByTutor, nil, false)
+		handler, _ := Handle[homeworkpb.ListAssignmentsByTutorRequest, homeworkpb.ListAssignmentsResponse](h.c.ListAssignmentsByTutor, nil, false)
 		handler(w, r.WithContext(context.WithValue(ctx, "req", x)))
 	case *homeworkpb.ListAssignmentsByStudentRequest:
-		handler, _ := Handle[*homeworkpb.ListAssignmentsByStudentRequest, homeworkpb.ListAssignmentsResponse](h.c.ListAssignmentsByStudent, nil, false)
+		handler, _ := Handle[homeworkpb.ListAssignmentsByStudentRequest, homeworkpb.ListAssignmentsResponse](h.c.ListAssignmentsByStudent, nil, false)
 		handler(w, r.WithContext(context.WithValue(ctx, "req", x)))
 	case *homeworkpb.ListAssignmentsByPairRequest:
-		handler, _ := Handle[*homeworkpb.ListAssignmentsByPairRequest, homeworkpb.ListAssignmentsResponse](h.c.ListAssignmentsByPair, nil, false)
+		handler, _ := Handle[homeworkpb.ListAssignmentsByPairRequest, homeworkpb.ListAssignmentsResponse](h.c.ListAssignmentsByPair, nil, false)
 		handler(w, r.WithContext(context.WithValue(ctx, "req", x)))
 	default:
 		http.Error(w, "invalid query", http.StatusBadRequest)
@@ -201,11 +193,11 @@ func (h *HomeworkHandler) CreateFeedback(w http.ResponseWriter, r *http.Request)
 
 func (h *HomeworkHandler) UpdateFeedback(w http.ResponseWriter, r *http.Request) {
 	handler, _ := Handle[homeworkpb.UpdateFeedbackRequest, homeworkpb.Feedback](h.c.UpdateFeedback, func(ctx context.Context, r *http.Request, req *homeworkpb.UpdateFeedbackRequest) error {
-		subID, err := parsePathParam(r, "submission_id")
+		id, err := parsePathParam(r, "id")
 		if err != nil {
 			return err
 		}
-		req.SubmissionId = subID
+		req.Id = id
 		return nil
 	}, true)
 	handler(w, r)
