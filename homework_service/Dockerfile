@@ -4,6 +4,9 @@ WORKDIR /app
 COPY homework_service/go.mod  ./
 COPY homework_service/go.sum  ./
 
+COPY user_service/     /user_service/
+COPY file_service/     /file_service/
+
 COPY common_library/   /common_library/
 
 RUN go mod download
