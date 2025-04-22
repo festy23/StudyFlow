@@ -1,20 +1,20 @@
 package domain
 
 import (
+	"github.com/google/uuid"
 	"time"
 )
 
 type Assignment struct {
-	ID          string
-	TutorID     string
-	StudentID   string
-	Title       string
-	Description string
-	FileID      *string
+	ID          uuid.UUID
+	TutorID     uuid.UUID
+	StudentID   uuid.UUID
+	Title       *string
+	Description *string
+	FileID      *uuid.UUID
 	DueDate     *time.Time
 	CreatedAt   time.Time
 	EditedAt    time.Time
-	Status      string
 }
 
 type AssignmentStatus string
@@ -28,9 +28,7 @@ const (
 )
 
 type AssignmentFilter struct {
-	TutorID     string
-	StudentID   string
-	Statuses    []AssignmentStatus
-	OnlyActive  bool
-	OnlyOverdue bool
+	TutorID   uuid.UUID
+	StudentID uuid.UUID
+	Statuses  []AssignmentStatus
 }

@@ -3,9 +3,13 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"time"
 
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -38,6 +42,24 @@ func NewPostgres(cfg Config) (*Postgres, error) {
 
 	if err := db.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping db: %w", err)
+	}
+
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create postgres driver: %w", err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://migrations",
+		cfg.DBName,
+		driver,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init migration: %w", err)
+	}
+
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return nil, fmt.Errorf("migration failed: %w", err)
 	}
 
 	return &Postgres{db: db}, nil

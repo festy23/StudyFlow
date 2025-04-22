@@ -1,33 +1,33 @@
 package main
 
 import (
-	"context"
+	"common_library/logging"
+	"common_library/metadata"
+	"google.golang.org/grpc/credentials/insecure"
+	configs "homework_service/config"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	_ "github.com/lib/pq"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"google.golang.org/grpc"
+
 	"homework_service/internal/app"
 	"homework_service/internal/repository"
-	"homework_service/internal/server/grpc"
+	"homework_service/internal/server/homework_grpc"
 	"homework_service/internal/service"
 	"homework_service/pkg/db"
 	"homework_service/pkg/kafka"
 	"homework_service/pkg/logger"
-	"homework_service/proto/homework/v1"
-)
 
-type UserClient interface {
-	UserExists(ctx context.Context, userID string) bool
-	IsPair(ctx context.Context, tutorID, studentID string) bool
-	GetUserRole(ctx context.Context, userID string) (string, error)
-}
+	_ "github.com/lib/pq"
+)
 
 func main() {
 	log := logger.New()
 
-	cfg, err := LoadConfig()
+	cfg, err := configs.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -51,12 +51,48 @@ func main() {
 	submissionRepo := repository.NewSubmissionRepository(pg.DB())
 	feedbackRepo := repository.NewFeedbackRepository(pg.DB())
 
-	userClient := app.NewUserClient(cfg.Services.User)
-	fileClient := app.NewFileClient(cfg.Services.File)
+	userGrpc, err := grpc.NewClient(
+		cfg.Services.UserService.Address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create user service: %v", err)
+	}
+	fileGrpc, err := grpc.NewClient(
+		cfg.Services.FileService.Address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create file service: %v", err)
+	}
+	userClient := app.NewUserClient(userGrpc)
+	fileClient := app.NewFileClient(fileGrpc)
 
-	assignmentService := service.NewAssignmentService(assignmentRepo, userClient, fileClient)
-	submissionService := service.NewSubmissionService(submissionRepo, assignmentRepo, fileClient)
-	feedbackService := service.NewFeedbackService(feedbackRepo, submissionRepo, assignmentRepo, fileClient)
+	assignmentService := service.NewAssignmentService(
+		*assignmentRepo,
+		userClient,
+		fileClient,
+	)
+
+	submissionService := service.NewSubmissionService(
+		submissionRepo,
+		assignmentRepo,
+		fileClient,
+	)
+
+	feedbackService := service.NewFeedbackService(
+		feedbackRepo,
+		submissionRepo,
+		assignmentRepo,
+		fileClient,
+	)
+
+	handler := homework_grpc.NewHomeworkHandler(
+		*assignmentService,
+		submissionService,
+		feedbackService,
+		log,
+	)
 
 	kafkaConfig := kafka.Config{
 		Brokers: cfg.Kafka.Brokers,
@@ -68,12 +104,16 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	handler := grpc.NewHomeworkHandler(
-		assignmentService,
-		submissionService,
-		feedbackService,
+	interceptor := grpc_middleware.ChainUnaryServer(
+		metadata.NewMetadataUnaryInterceptor(),
+		logging.NewUnaryLoggingInterceptor(logging.New(log.ZapLogger)),
 	)
-	grpcServer := grpc.NewServer(grpc.Config{Address: cfg.GRPC.Address}, handler)
+
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor),
+	)
+
+	homework_grpc.RegisterHomeworkServiceServer(grpcServer, handler)
 
 	listener, err := net.Listen("tcp", cfg.GRPC.Address)
 	if err != nil {
@@ -92,64 +132,6 @@ func main() {
 	<-quit
 
 	log.Info("Shutting down server...")
-	grpcServer.Stop()
+	grpcServer.GracefulStop()
 	log.Info("Server stopped")
-}
-
-type Config struct {
-	DB struct {
-		Host     string
-		Port     int
-		User     string
-		Password string
-		DBName   string
-		SSLMode  string
-	}
-	Kafka struct {
-		Brokers []string
-	}
-	GRPC struct {
-		Address string
-	}
-	Services struct {
-		User string
-		File string
-	}
-}
-
-func LoadConfig() (*Config, error) {
-	return &Config{
-		DB: struct {
-			Host     string
-			Port     int
-			User     string
-			Password string
-			DBName   string
-			SSLMode  string
-		}{
-			Host:     "localhost",
-			Port:     5432,
-			User:     "user",
-			Password: "password",
-			DBName:   "homework",
-			SSLMode:  "disable",
-		},
-		Kafka: struct {
-			Brokers []string
-		}{
-			Brokers: []string{"localhost:9092"},
-		},
-		GRPC: struct {
-			Address string
-		}{
-			Address: ":50051",
-		},
-		Services: struct {
-			User string
-			File string
-		}{
-			User: "http://user-service",
-			File: "http://file-service",
-		},
-	}, nil
 }
