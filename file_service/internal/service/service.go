@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -24,13 +25,15 @@ type FileRepository interface {
 }
 
 type FileService struct {
-	fileRepo FileRepository
-	s3Client *s3.Client
-	bucket   *string
+	fileRepo         FileRepository
+	s3Client         *s3.Client
+	bucket           *string
+	gatewayPublicUrl string
+	minioURL         string
 }
 
-func NewFileService(ctx context.Context, fileRepo FileRepository, client *s3.Client, bucketName string) (*FileService, error) {
-	s := &FileService{fileRepo: fileRepo, s3Client: client, bucket: aws.String(bucketName)}
+func NewFileService(ctx context.Context, fileRepo FileRepository, client *s3.Client, bucketName string, gatewayPublicUrl string, minioUrl string) (*FileService, error) {
+	s := &FileService{fileRepo: fileRepo, s3Client: client, bucket: aws.String(bucketName), gatewayPublicUrl: gatewayPublicUrl, minioURL: minioUrl}
 	err := s.createBucket(ctx, bucketName)
 	return s, err
 }
@@ -64,7 +67,7 @@ func (s *FileService) InitUpload(ctx context.Context, input *model.InitUploadInp
 
 	res := &model.InitUpload{
 		FileId:    file.Id,
-		UploadURL: uploadRequest.URL,
+		UploadURL: strings.Replace(uploadRequest.URL, s.minioURL, s.gatewayPublicUrl+"/files/upload", 1),
 		Method:    uploadRequest.Method,
 	}
 
@@ -85,7 +88,7 @@ func (s *FileService) GenerateDownloadURL(ctx context.Context, fileId uuid.UUID)
 		return "", err
 	}
 
-	return downloadRequest.URL, nil
+	return strings.Replace(downloadRequest.URL, s.minioURL, s.gatewayPublicUrl+"/files/download", 1), nil
 }
 
 func (s *FileService) GetFileMeta(ctx context.Context, fileId uuid.UUID) (*model.File, error) {

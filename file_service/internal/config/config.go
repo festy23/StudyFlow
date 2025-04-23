@@ -16,6 +16,7 @@ type Config struct {
 	S3SecretAccessKey   string `env:"S3_SECRET_ACCESS_KEY" env-default:""`
 	S3Endpoint          string `env:"S3_ENDPOINT" env-default:""`
 	S3Region            string `env:"S3_REGION" env-default:"us-east-1"`
+	GatewayPublicUrl    string `env:"GATEWAY_PUBLIC_URL" env-default:"localhost:8080"`
 }
 
 func New() (*Config, error) {

@@ -52,7 +52,7 @@ func main() {
 		logger.Fatal(ctx, "cannot create S3 client", zap.Error(err))
 	}
 
-	fileService, err := service.NewFileService(ctx, repo, s3Client, "user-files")
+	fileService, err := service.NewFileService(ctx, repo, s3Client, "user-files", cfg.GatewayPublicUrl, cfg.S3Endpoint)
 	if err != nil {
 		logger.Fatal(ctx, "cannot create fileService", zap.Error(err))
 	}

@@ -1,9 +1,9 @@
 services:
   minio:
     image: quay.io/minio/minio
-    expose:
-      - "9000"
-      - "9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
 
     environment:
       MINIO_ROOT_USER: ROOTUSER
@@ -95,8 +95,6 @@ services:
       dockerfile: ./user_service/Dockerfile
     expose:
       - "50051"
-    env_file:
-      - ./user_service/config/.env
     environment:
       GRPC_PORT: 50051
       POSTGRES_URL: postgres://postgres:postgres@user-db:5432/postgres?sslmode=disable
@@ -111,8 +109,6 @@ services:
       dockerfile: ./file_service/Dockerfile
     expose:
       - "50051"
-    env_file:
-      - ./file_service/config/.env
     environment:
       GRPC_PORT: 50051
       POSTGRES_URL: postgres://postgres:postgres@file-db:5432/postgres?sslmode=disable
@@ -123,6 +119,7 @@ services:
       S3_SECRET_ACCESS_KEY: PASSWORD
       S3_ENDPOINT: http://minio:9000
       S3_REGION: us-east-1
+      GATEWAY_PUBLIC_URL: http://localhost:8080
 
   homework-service:
     build:
@@ -165,8 +162,6 @@ services:
       dockerfile: ./schedule_service/Dockerfile
     expose:
       - "50051"
-    env_file:
-      - ./schedule_service/.env
     environment:
       GRPC_PORT: 50051
       POSTGRES_URL: postgres://postgres:postgres@schedule-db:5432/postgres?sslmode=disable
@@ -190,6 +185,7 @@ services:
       SCHEDULE_SERVICE_URL: "schedule-service:50051"
       HOMEWORK_SERVICE_URL: "homework-service:50051"
       PAYMENT_SERVICE_URL: "payment-service:50051"
+      MINIO_URL: "http://minio:9000"
 
 
 volumes:

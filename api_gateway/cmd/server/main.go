@@ -52,7 +52,7 @@ func main() {
 	authHandler := handler.NewSignUpHandler(userClient)
 
 	fileClient := filepb.NewFileServiceClient(fileGrpcClient)
-	fileHandler := handler.NewFileHandler(fileClient)
+	fileHandler := handler.NewFileHandler(fileClient, cfg.MinioURL)
 
 	homeworkClient := homeworkpb.NewHomeworkServiceClient(homeworkGrpcClient)
 	homeworkHandler := handler.NewHomeworkHandler(homeworkClient)
