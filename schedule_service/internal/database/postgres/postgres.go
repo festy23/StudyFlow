@@ -496,3 +496,19 @@ func (r *PostgresRepository) queryLessons(ctx context.Context, query string, arg
 
 	return lessons, nil
 }
+
+func (r *PostgresRepository) MarkAsPaid(ctx context.Context, lessonID string) error {
+	query := `UPDATE lessons SET is_paid = TRUE WHERE id = $1`
+
+	res, err := r.pool.Exec(ctx, query, lessonID)
+
+	if err != nil {
+		return fmt.Errorf("failed to mark as paid: %w", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return service.ErrLessonNotFound
+	}
+	return nil
+
+}

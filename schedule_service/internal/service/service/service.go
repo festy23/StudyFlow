@@ -586,3 +586,12 @@ func (s *ScheduleServer) ListCompletedUnpaidLessons(ctx context.Context, req *pb
 
 	return createListLessonsResponse(lessons), nil
 }
+
+func (s *ScheduleServer) MarkAsPaid(ctx context.Context, lessonID string) error {
+
+	if err := s.db.MarkAsPaid(ctx, lessonID); err != nil {
+		return err
+	}
+	return nil
+
+}
