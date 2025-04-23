@@ -587,11 +587,24 @@ func (s *ScheduleServer) ListCompletedUnpaidLessons(ctx context.Context, req *pb
 	return createListLessonsResponse(lessons), nil
 }
 
-func (s *ScheduleServer) MarkAsPaid(ctx context.Context, lessonID string) error {
-
-	if err := s.db.MarkAsPaid(ctx, lessonID); err != nil {
-		return err
+func (s *ScheduleServer) MarkAsPaid(ctx context.Context, req *pb.MarkAsPaidRequest) (*pb.Lesson, error) {
+	if err := uuid.Validate(req.Id); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
-	return nil
+
+	lesson, err := s.db.GetLesson(ctx, req.Id)
+	if err != nil {
+		if errors.Is(err, ErrLessonNotFound) {
+			return nil, StatusNotFound
+		}
+		return nil, StatusInternalError
+	}
+
+	if err := s.db.MarkAsPaid(ctx, lesson.ID); err != nil {
+		return nil, err
+	}
+	lesson.IsPaid = true
+
+	return convertrepoLessonToProto(lesson), nil
 
 }
