@@ -1,0 +1,45 @@
+# Define the Go tool
+GO ?= go
+PROTOC ?= protoc
+
+# Define the paths
+PROTO_DIR = proto
+API_DIR = pkg/api
+SERVICE_DIR = internal/service
+HANDLER_DIR = internal/handler
+DATA_DIR = internal/data
+
+# Default target
+.PHONY: all
+all: generate test
+
+# Generate Go code from proto files
+.PHONY: generate
+generate:
+	@echo "Generating Go code from proto files..."
+	$(PROTOC) -I $(PROTO_DIR) $(PROTO_DIR)/payment_service.proto --go_out=$(API_DIR) --go_opt=paths=source_relative --go-grpc_out=$(API_DIR) --go-grpc_opt=paths=source_relative
+
+# Run tests
+.PHONY: test
+test: test-service test-handler test-data
+
+.PHONY: test-service
+test-service:
+	@echo "Testing service..."
+	$(GO) test ./$(SERVICE_DIR)
+
+.PHONY: test-handler
+test-handler:
+	@echo "Testing handler..."
+	$(GO) test ./$(HANDLER_DIR)
+
+.PHONY: test-data
+test-data:
+	@echo "Testing data..."
+	$(GO) test ./$(DATA_DIR)
+
+# Clean generated files
+.PHONY: clean
+clean:
+	@echo "Cleaning generated files..."
+	rm -rf $(API_DIR)/*

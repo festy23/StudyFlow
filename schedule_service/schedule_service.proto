@@ -4,7 +4,7 @@ package schedule.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "./pkg/api";
+option go_package = "./pkg/pkg";
 // ==== SERVICE ====
 
 service ScheduleService {

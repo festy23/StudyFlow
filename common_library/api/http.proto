@@ -17,10 +17,10 @@ syntax = "proto3";
 
 package google.api;
 
-option go_package = "google.golang.org/genproto/googleapis/api/annotations;annotations";
+option go_package = "google.golang.org/genproto/googleapis/pkg/annotations;annotations";
 option java_multiple_files = true;
 option java_outer_classname = "HttpProto";
-option java_package = "com.google.api";
+option java_package = "com.google.pkg";
 option objc_class_prefix = "GAPI";
 
 // Defines the HTTP configuration for an API service. It contains a list of

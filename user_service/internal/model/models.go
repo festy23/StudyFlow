@@ -110,7 +110,7 @@ type TutorStudent struct {
 	EditedAt             time.Time          `db:"edited_at"`
 }
 
-// not from db
+// TutorStudentContext not from db
 type TutorStudentContext struct {
 	RelationshipStatus TutorStudentStatus
 
