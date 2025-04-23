@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/metadata"
 	"schedule_service/internal/database/repo"
 	pb "schedule_service/pkg/api"
 	"time"
@@ -99,7 +100,9 @@ func (s *ScheduleServer) ValidateTutorStudentPair(ctx context.Context, tutorID, 
 	if !ok {
 		return false, errors.New("user role not found in context")
 	}
-	tutorStudent, err := s.UserClient.GetTutorStudent(ctx, tutorID, studentID)
+
+	reqCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("x-user-id", currentUserID, "x-user-role", currentUserRole))
+	tutorStudent, err := s.UserClient.GetTutorStudent(reqCtx, tutorID, studentID)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return false, nil

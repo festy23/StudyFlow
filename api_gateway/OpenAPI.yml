@@ -658,6 +658,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /users/tutor-students/{tutor_id}/accept:
+    post:
+      summary: Accept tutor invitation
+      operationId: acceptInvitationFromTutor
+      parameters:
+        - name: tutor_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invitation accepted
+        '400':
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Tutor or relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /users/tutor-students:
     post:
       summary: Create tutor-student relationship

@@ -34,7 +34,7 @@ func (s *ScheduleServer) GetSlot(ctx context.Context, req *pb.GetSlotRequest) (*
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
 
-	if err := uuid.Validate(req.Id); err == nil {
+	if err := uuid.Validate(req.Id); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -76,8 +76,8 @@ func (s *ScheduleServer) CreateSlot(ctx context.Context, req *pb.CreateSlotReque
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
-	if err := uuid.Validate(userID); err == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	if err := uuid.Validate(userID); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID "+userID)
 	}
 
 	isTutor, err := IsTutor(ctx, userID)
@@ -136,7 +136,7 @@ func (s *ScheduleServer) UpdateSlot(ctx context.Context, req *pb.UpdateSlotReque
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
 
-	if err := uuid.Validate(req.Id); err == nil {
+	if err := uuid.Validate(req.Id); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -193,7 +193,7 @@ func (s *ScheduleServer) DeleteSlot(ctx context.Context, req *pb.DeleteSlotReque
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
 
-	if err := uuid.Validate(req.Id); err == nil {
+	if err := uuid.Validate(req.Id); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -226,7 +226,7 @@ func (s *ScheduleServer) ListSlotsByTutor(ctx context.Context, req *pb.ListSlots
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
 
-	if err := uuid.Validate(req.TutorId); err == nil {
+	if err := uuid.Validate(req.TutorId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid TutorID")
 	}
 
@@ -275,7 +275,7 @@ func (s *ScheduleServer) GetLesson(ctx context.Context, req *pb.GetLessonRequest
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
-	if err := uuid.Validate(req.Id); err == nil {
+	if err := uuid.Validate(req.Id); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -304,10 +304,10 @@ func (s *ScheduleServer) CreateLesson(ctx context.Context, req *pb.CreateLessonR
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
-	if err := uuid.Validate(req.SlotId); err == nil {
+	if err := uuid.Validate(req.SlotId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
-	if err := uuid.Validate(req.StudentId); err == nil {
+	if err := uuid.Validate(req.StudentId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -337,7 +337,7 @@ func (s *ScheduleServer) CreateLesson(ctx context.Context, req *pb.CreateLessonR
 
 	isValidPair, err := s.ValidateTutorStudentPair(ctx, tutorID, studentID)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to validate tutor-student relationship")
+		return nil, status.Error(codes.Internal, "failed to validate tutor-student relationship: "+err.Error())
 	}
 	if !isValidPair {
 		return nil, status.Error(codes.FailedPrecondition, "tutor and student are not connected")
@@ -376,7 +376,7 @@ func (s *ScheduleServer) UpdateLesson(ctx context.Context, req *pb.UpdateLessonR
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
-	if err := uuid.Validate(req.Id); err == nil {
+	if err := uuid.Validate(req.Id); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -430,7 +430,7 @@ func (s *ScheduleServer) CancelLesson(ctx context.Context, req *pb.CancelLessonR
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
-	if err := uuid.Validate(req.Id); err == nil {
+	if err := uuid.Validate(req.Id); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -467,8 +467,8 @@ func (s *ScheduleServer) ListLessonsByTutor(ctx context.Context, req *pb.ListLes
 	if !ok {
 		return nil, StatusUnauthenticated
 	}
-	if err := uuid.Validate(req.TutorId); err == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid ID")
+	if err := uuid.Validate(req.TutorId); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid ID: "+req.TutorId)
 	}
 
 	if req.TutorId != userID {
@@ -516,7 +516,7 @@ func (s *ScheduleServer) ListLessonsByStudent(ctx context.Context, req *pb.ListL
 			statusFilters = append(statusFilters, "completed")
 		}
 	}
-	if err := uuid.Validate(req.StudentId); err == nil {
+	if err := uuid.Validate(req.StudentId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 
@@ -557,10 +557,10 @@ func (s *ScheduleServer) ListLessonsByPair(ctx context.Context, req *pb.ListLess
 			statusFilters = append(statusFilters, "completed")
 		}
 	}
-	if err := uuid.Validate(req.TutorId); err == nil {
+	if err := uuid.Validate(req.TutorId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
-	if err := uuid.Validate(req.StudentId); err == nil {
+	if err := uuid.Validate(req.StudentId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid ID")
 	}
 

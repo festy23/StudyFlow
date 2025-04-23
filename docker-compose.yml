@@ -143,14 +143,21 @@ services:
       USER_SERVICE_ADDRESS: "user-service:50051"
       FILE_SERVICE_ADDRESS: "file-service:50051"
 
-#  payment-service:
-#    build:
-#      context: .
-#      dockerfile: ./payment_service/Dockerfile
-#    ports:
-#      - "50054:50051"
-#    env_file:
-#      - ./payment_service/config/.env
+  payment-service:
+    build:
+      context: .
+      dockerfile: ./payment_service/Dockerfile
+    ports:
+      - "50054:50051"
+    environment:
+      GRPC_PORT: 50051
+      POSTGRES_URL: postgres://postgres:postgres@schedule-db:5432/postgres?sslmode=disable
+      POSTGRES_MAX_CONN: 5
+      POSTGRES_MIN_CONN: 1
+      POSTGRES_AUTO_MIGRATE: true
+      USER_CLIENT_URL: "user-service:50051"
+      FILE_SERVICE_URL: "file-service:50051"
+      SCHEDULE_SERVICE_URL: "schedule-service:50051"
 
   schedule-service:
     build:

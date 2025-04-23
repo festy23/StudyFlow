@@ -21,20 +21,18 @@ func NewScheduleHandler(c schedulepb.ScheduleServiceClient) *ScheduleHandler {
 }
 
 func (h *ScheduleHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.Handler) http.Handler) {
-	r.Route("/schedule", func(r chi.Router) {
-		r.With(authMiddleware).Group(func(r chi.Router) {
-			r.Post("/slots", h.CreateSlot)
-			r.Get("/slots/{id}", h.GetSlot)
-			r.Patch("/slots/{id}", h.UpdateSlot)
-			r.Delete("/slots/{id}", h.DeleteSlot)
-			r.Get("/slots/by-tutor/{tutor_id}", h.ListSlotsByTutor)
+	r.With(authMiddleware).Group(func(r chi.Router) {
+		r.Post("/slots", h.CreateSlot)
+		r.Get("/slots/{id}", h.GetSlot)
+		r.Patch("/slots/{id}", h.UpdateSlot)
+		r.Delete("/slots/{id}", h.DeleteSlot)
+		r.Get("/slots/by-tutor/{tutor_id}", h.ListSlotsByTutor)
 
-			r.Get("/lessons", h.ListLessons)
-			r.Post("/lessons", h.CreateLesson)
-			r.Get("/lessons/{id}", h.GetLesson)
-			r.Patch("/lessons/{id}", h.UpdateLesson)
-			r.Post("/lessons/{id}/cancel", h.CancelLesson)
-		})
+		r.Get("/lessons", h.ListLessons)
+		r.Post("/lessons", h.CreateLesson)
+		r.Get("/lessons/{id}", h.GetLesson)
+		r.Patch("/lessons/{id}", h.UpdateLesson)
+		r.Post("/lessons/{id}/cancel", h.CancelLesson)
 	})
 }
 
@@ -241,19 +239,39 @@ func (h *ScheduleHandler) ListLessons(w http.ResponseWriter, r *http.Request) {
 
 	switch req := customReq.(type) {
 	case *schedulepb.ListLessonsByTutorRequest:
-		handler, err := Handle[schedulepb.ListLessonsByTutorRequest, schedulepb.ListLessonsResponse](h.c.ListLessonsByTutor, nil, false)
+		handler, err := Handle[schedulepb.ListLessonsByTutorRequest, schedulepb.ListLessonsResponse](
+			h.c.ListLessonsByTutor,
+			func(_ context.Context, _ *http.Request, grpcReq *schedulepb.ListLessonsByTutorRequest) error {
+				grpcReq.TutorId = req.TutorId
+				grpcReq.StatusFilter = req.StatusFilter
+				return nil
+			}, false,
+		)
 		if err != nil {
 			panic(err)
 		}
 		handler(w, r.WithContext(context.WithValue(ctx, "req", req)))
 	case *schedulepb.ListLessonsByStudentRequest:
-		handler, err := Handle[schedulepb.ListLessonsByStudentRequest, schedulepb.ListLessonsResponse](h.c.ListLessonsByStudent, nil, false)
+		handler, err := Handle[schedulepb.ListLessonsByStudentRequest, schedulepb.ListLessonsResponse](
+			h.c.ListLessonsByStudent,
+			func(_ context.Context, _ *http.Request, grpcReq *schedulepb.ListLessonsByStudentRequest) error {
+				grpcReq.StudentId = req.StudentId
+				grpcReq.StatusFilter = req.StatusFilter
+				return nil
+			}, false)
 		if err != nil {
 			panic(err)
 		}
 		handler(w, r.WithContext(context.WithValue(ctx, "req", req)))
 	case *schedulepb.ListLessonsByPairRequest:
-		handler, err := Handle[schedulepb.ListLessonsByPairRequest, schedulepb.ListLessonsResponse](h.c.ListLessonsByPair, nil, false)
+		handler, err := Handle[schedulepb.ListLessonsByPairRequest, schedulepb.ListLessonsResponse](
+			h.c.ListLessonsByPair,
+			func(_ context.Context, _ *http.Request, grpcReq *schedulepb.ListLessonsByPairRequest) error {
+				grpcReq.TutorId = req.TutorId
+				grpcReq.StudentId = req.StudentId
+				grpcReq.StatusFilter = req.StatusFilter
+				return nil
+			}, false)
 		if err != nil {
 			panic(err)
 		}

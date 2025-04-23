@@ -1,8 +1,11 @@
 module schedule_service
 
-go 1.23.4
+go 1.24.0
+
+toolchain go1.24.2
 
 require (
+	common_library v0.0.0-00010101000000-000000000000
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -10,8 +13,14 @@ require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/segmentio/kafka-go v0.4.47
 	go.uber.org/zap v1.27.0
-	google.golang.org/grpc v1.71.1
+	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
+	userservice v0.0.0-00010101000000-000000000000
+)
+
+replace (
+	common_library => ../common_library
+	userservice => ../user_service
 )
 
 require (
@@ -32,7 +41,7 @@ require (
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250115164207-1a7da9e5054f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )

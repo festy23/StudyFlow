@@ -25,12 +25,13 @@ func (h *UserHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.Hand
 		r.Patch("/users/{id}", h.UpdateUser)
 		r.Get("/tutor-profiles/{id}", h.GetTutorProfile)
 		r.Patch("/tutor-profiles/{id}", h.UpdateTutorProfile)
-		r.Get("/users/tutor-students/by-tutor/{id}", h.GetTutorStudent)
-		r.Get("/users/tutor-students/by-student/{id}", h.GetTutorStudent)
-		r.Get("/users/tutor-profiles/{tutor_id}/{student_id}", h.GetTutorProfile)
-		r.Patch("/users/tutor-profiles/{tutor_id}/{student_id}", h.UpdateUser)
-		r.Delete("/users/tutor-profiles/{tutor_id}/{student_id}", h.DeleteTutorStudent)
-		r.Post("/users/tutor-students", h.CreateTutorStudent)
+		r.Get("/tutor-students/by-tutor/{id}", h.ListTutorStudentByTutor)
+		r.Get("/tutor-students/by-student/{id}", h.ListTutorStudentByStudent)
+		r.Get("/tutor-students/{tutor_id}/{student_id}", h.GetTutorStudent)
+		r.Patch("/tutor-students/{tutor_id}/{student_id}", h.UpdateTutorStudent)
+		r.Delete("/tutor-students/{tutor_id}/{student_id}", h.DeleteTutorStudent)
+		r.Post("/tutor-students", h.CreateTutorStudent)
+		r.Post("/tutor-students/{tutor_id}/accept", h.AcceptInvitation)
 	})
 }
 
@@ -120,7 +121,6 @@ func (h *UserHandler) DeleteTutorStudent(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		panic(err)
 	}
-
 	handler(w, r)
 }
 
@@ -131,6 +131,28 @@ func (h *UserHandler) CreateTutorStudent(w http.ResponseWriter, r *http.Request)
 	}
 
 	handler(w, r)
+}
+
+func (h *UserHandler) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
+	handler, err := Handle[userpb.AcceptInvitationFromTutorRequest, userpb.Empty](
+		h.c.AcceptInvitationFromTutor, acceptInvitationParsePath, false,
+	)
+	if err != nil {
+		panic(err)
+	}
+	handler(w, r)
+}
+
+func acceptInvitationParsePath(ctx context.Context, httpReq *http.Request, grpcReq *userpb.AcceptInvitationFromTutorRequest) error {
+	tutorId := chi.URLParam(httpReq, "tutor_id")
+	if tutorId == "" {
+		return fmt.Errorf("%w: %s", BadRequestError, "tutorId is required")
+	}
+	grpcReq.TutorId = tutorId
+	if logger, ok := logging.GetFromContext(ctx); ok {
+		logger.Debug(ctx, "user id added to request", zap.Any("req", grpcReq))
+	}
+	return nil
 }
 
 func getUserParsePath(ctx context.Context, httpReq *http.Request, grpcReq *userpb.GetUserRequest) error {

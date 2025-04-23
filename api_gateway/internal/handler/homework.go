@@ -19,23 +19,21 @@ func NewHomeworkHandler(c homeworkpb.HomeworkServiceClient) *HomeworkHandler {
 }
 
 func (h *HomeworkHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.Handler) http.Handler) {
-	r.Route("/homework", func(r chi.Router) {
-		r.With(authMiddleware).Group(func(r chi.Router) {
-			r.Post("/assignments", h.CreateAssignment)
-			r.Get("/assignments", h.ListAssignments)
-			r.Patch("/assignments/{id}", h.UpdateAssignment)
-			r.Delete("/assignments/{id}", h.DeleteAssignment)
-			r.Get("/assignments/{assignment_id}/file-url", h.GetAssignmentFile)
-			r.Get("/assignments/{assignment_id}/submissions", h.ListSubmissions)
-			r.Get("/assignments/{assignment_id}/feedbacks", h.ListFeedbacks)
+	r.With(authMiddleware).Group(func(r chi.Router) {
+		r.Post("/assignments", h.CreateAssignment)
+		r.Get("/assignments", h.ListAssignments)
+		r.Patch("/assignments/{id}", h.UpdateAssignment)
+		r.Delete("/assignments/{id}", h.DeleteAssignment)
+		r.Get("/assignments/{assignment_id}/file-url", h.GetAssignmentFile)
+		r.Get("/assignments/{assignment_id}/submissions", h.ListSubmissions)
+		r.Get("/assignments/{assignment_id}/feedbacks", h.ListFeedbacks)
 
-			r.Post("/submissions", h.CreateSubmission)
-			r.Get("/submissions/{submission_id}/file-url", h.GetSubmissionFile)
+		r.Post("/submissions", h.CreateSubmission)
+		r.Get("/submissions/{submission_id}/file-url", h.GetSubmissionFile)
 
-			r.Post("/feedbacks", h.CreateFeedback)
-			r.Patch("/feedbacks/{id}", h.UpdateFeedback)
-			r.Get("/feedbacks/{feedback_id}/file-url", h.GetFeedbackFile)
-		})
+		r.Post("/feedbacks", h.CreateFeedback)
+		r.Patch("/feedbacks/{id}", h.UpdateFeedback)
+		r.Get("/feedbacks/{feedback_id}/file-url", h.GetFeedbackFile)
 	})
 }
 

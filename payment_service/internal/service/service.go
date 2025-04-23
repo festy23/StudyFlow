@@ -3,11 +3,13 @@
 package service
 
 import (
+	"common_library/ctxdata"
 	"context"
 	api2 "fileservice/pkg/api"
 	"fmt"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log"
 	"math"
@@ -65,7 +67,7 @@ func (s *PaymentService) SubmitPaymentReceipt(ctx context.Context, input *models
 	}
 
 	lesson, err := retry[*api3.Lesson](ctx, maxRetries, retryDelay, func() (*api3.Lesson, error) {
-		return s.scheduleClient.GetLesson(ctx, getLessonRequest)
+		return s.scheduleClient.GetLesson(ctxWithMetadata(ctx), getLessonRequest)
 	})
 	if err != nil {
 		return nil, err
@@ -83,7 +85,7 @@ func (s *PaymentService) SubmitPaymentReceipt(ctx context.Context, input *models
 		PaymentInfo:    lesson.PaymentInfo,
 	}
 	lesson, err = retry[*api3.Lesson](ctx, maxRetries, retryDelay, func() (*api3.Lesson, error) {
-		return s.scheduleClient.UpdateLesson(ctx, updateLessonRequest)
+		return s.scheduleClient.UpdateLesson(ctxWithMetadata(ctx), updateLessonRequest)
 	})
 	if err != nil {
 		return nil, err
@@ -103,7 +105,7 @@ func (s *PaymentService) SubmitPaymentReceipt(ctx context.Context, input *models
 		IsVerified: true,
 	}
 	receipt, err := retry(ctx, maxRetries, retryDelay, func() (*models.PaymentReceipt, error) {
-		return s.repo.CreateReceipt(ctx, createReceiptInput)
+		return s.repo.CreateReceipt(ctxWithMetadata(ctx), createReceiptInput)
 	})
 	if err != nil {
 		return nil, errdefs.ErrNotFound
@@ -124,7 +126,7 @@ func (s *PaymentService) GetPaymentInfo(ctx context.Context, input *models.GetPa
 	}
 
 	lesson, err := retry(ctx, maxRetries, retryDelay, func() (*api3.Lesson, error) {
-		return s.scheduleClient.GetLesson(ctx, getLessonRequest)
+		return s.scheduleClient.GetLesson(ctxWithMetadata(ctx), getLessonRequest)
 	})
 	if err != nil {
 		return nil, err
@@ -145,7 +147,7 @@ func (s *PaymentService) GetReceipt(ctx context.Context, input *models.GetReceip
 	}
 
 	receipt, err := retry[*models.PaymentReceipt](ctx, maxRetries, retryDelay, func() (*models.PaymentReceipt, error) {
-		return s.repo.GetReceiptByID(ctx, input.ReceiptId)
+		return s.repo.GetReceiptByID(ctxWithMetadata(ctx), input.ReceiptId)
 	})
 	if err != nil {
 		return nil, err
@@ -177,7 +179,7 @@ func (s *PaymentService) GetReceiptFile(ctx context.Context, input *models.GetRe
 		return nil, err
 	}
 	generateDownloadURLRequest := &api2.GenerateDownloadURLRequest{FileId: receipt.FileID.String()}
-	url, err := s.fileClient.GenerateDownloadURL(ctx, generateDownloadURLRequest)
+	url, err := s.fileClient.GenerateDownloadURL(ctxWithMetadata(ctx), generateDownloadURLRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -225,4 +227,16 @@ func isRetriable(err error) bool {
 			s.Code() == codes.Unavailable || s.Code() == codes.InvalidArgument || s.Code() == codes.Internal
 	}
 	return false
+}
+
+func ctxWithMetadata(ctx context.Context) context.Context {
+	reqCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs())
+	if userId, ok := ctxdata.GetUserID(ctx); ok {
+		reqCtx = metadata.AppendToOutgoingContext(reqCtx, "x-user-id", userId)
+	}
+	if userRole, ok := ctxdata.GetUserRole(ctx); ok {
+		reqCtx = metadata.AppendToOutgoingContext(reqCtx, "x-user-role", userRole)
+	}
+
+	return reqCtx
 }

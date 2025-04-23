@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	paymentpb "payment_service/pkg/api"
+	paymentpb "paymentservice/pkg/api"
 )
 
 type PaymentHandler struct {
@@ -17,14 +17,12 @@ func NewPaymentHandler(c paymentpb.PaymentServiceClient) *PaymentHandler {
 }
 
 func (h *PaymentHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.Handler) http.Handler) {
-	r.Route("/payment", func(r chi.Router) {
-		r.With(authMiddleware).Group(func(r chi.Router) {
-			r.Get("/info/{lesson_id}", h.GetPaymentInfo)
-			r.Post("/receipts", h.SubmitReceipt)
-			r.Get("/receipts/{id}", h.GetReceipt)
-			r.Post("/receipts/{id}/verify", h.VerifyReceipt)
-			r.Get("/receipts/{id}/file-url", h.GetReceiptFile)
-		})
+	r.With(authMiddleware).Group(func(r chi.Router) {
+		r.Get("/info/{lesson_id}", h.GetPaymentInfo)
+		r.Post("/receipts", h.SubmitReceipt)
+		r.Get("/receipts/{id}", h.GetReceipt)
+		r.Post("/receipts/{id}/verify", h.VerifyReceipt)
+		r.Get("/receipts/{id}/file-url", h.GetReceiptFile)
 	})
 }
 
@@ -33,7 +31,7 @@ func parseGetPaymentInfo(ctx context.Context, r *http.Request, req *paymentpb.Ge
 	if err != nil {
 		return err
 	}
-	req.LessonId = id
+	req.LessonId = &id
 	return nil
 }
 
