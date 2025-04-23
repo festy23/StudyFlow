@@ -19,7 +19,7 @@ type Lesson struct {
 	ID             string
 	SlotID         string
 	StudentID      string
-	Status         string // "booked", "cancelled", "completed"
+	Status         string // "booked", "cancelled", "completeбd"
 	IsPaid         bool
 	ConnectionLink *string
 	PriceRub       *int32
@@ -47,4 +47,6 @@ type Repository interface {
 	ListCompletedUnpaidLessons(ctx context.Context, after *time.Time) ([]Lesson, error)
 
 	UpdateCompletedLessons(ctx context.Context) (int, error)
+
+	MarkAsPaid(ctx context.Context, lessonID string) error
 }
