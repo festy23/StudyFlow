@@ -1,6 +1,7 @@
 package main
 
 import (
+	"apigateway/internal/cache"
 	"apigateway/internal/client"
 	"apigateway/internal/config"
 	"apigateway/internal/handler"
@@ -10,6 +11,7 @@ import (
 	filepb "fileservice/pkg/api"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	homeworkpb "homework_service/pkg/api"
 	"net/http"
@@ -47,8 +49,14 @@ func main() {
 	scheduleGrpcClient, closeFunc := client.New(ctx, cfg.ScheduleServiceURL)
 	defer closeFunc()
 
+	redisConn := redis.NewClient(&redis.Options{
+		Addr: cfg.RedisURL,
+	})
+
+	redisCache := cache.NewRedisCache(redisConn)
+
 	userClient := userpb.NewUserServiceClient(userGrpcClient)
-	userHandler := handler.NewUserHandler(userClient)
+	userHandler := handler.NewUserHandler(userClient, redisCache)
 	authHandler := handler.NewSignUpHandler(userClient)
 
 	fileClient := filepb.NewFileServiceClient(fileGrpcClient)

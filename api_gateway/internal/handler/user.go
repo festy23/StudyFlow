@@ -7,15 +7,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 	userpb "userservice/pkg/api"
 )
 
 type UserHandler struct {
-	c userpb.UserServiceClient
+	c     userpb.UserServiceClient
+	cache Cache
 }
 
-func NewUserHandler(c userpb.UserServiceClient) *UserHandler {
-	return &UserHandler{c: c}
+func NewUserHandler(c userpb.UserServiceClient, cache Cache) *UserHandler {
+	return &UserHandler{c: c, cache: cache}
 }
 
 func (h *UserHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.Handler) http.Handler) {
@@ -36,7 +38,10 @@ func (h *UserHandler) RegisterRoutes(r chi.Router, authMiddleware func(http.Hand
 }
 
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
-	handler, err := Handle[userpb.Empty, userpb.User](h.c.GetMe, nil, false)
+	handler, err := HandleWithCache[userpb.Empty, userpb.User](
+		h.c.GetMe, nil, false,
+		h.cache, buildMeKey, 5*time.Minute,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +50,10 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	handler, err := Handle[userpb.GetUserRequest, userpb.UserPublic](h.c.GetUser, getUserParsePath, false)
+	handler, err := HandleWithCache[userpb.GetUserRequest, userpb.UserPublic](
+		h.c.GetUser, getUserParsePath, false,
+		h.cache, buildUserPublicKey, 5*time.Minute,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -59,11 +67,22 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	key, err := buildUserKey(r)
+	if err == nil {
+		h.cache.Delete(r.Context(), key)
+	}
+	key, err = buildUserPublicKey(r)
+	if err == nil {
+		h.cache.Delete(r.Context(), key)
+	}
 	handler(w, r)
 }
 
 func (h *UserHandler) GetTutorProfile(w http.ResponseWriter, r *http.Request) {
-	handler, err := Handle[userpb.GetTutorProfileByUserIdRequest, userpb.TutorProfile](h.c.GetTutorProfileByUserId, getTutorProfileParsePath, false)
+	handler, err := HandleWithCache[userpb.GetTutorProfileByUserIdRequest, userpb.TutorProfile](
+		h.c.GetTutorProfileByUserId, getTutorProfileParsePath, false,
+		h.cache, buildTutorProfileKey, 5*time.Minute,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -75,6 +94,10 @@ func (h *UserHandler) UpdateTutorProfile(w http.ResponseWriter, r *http.Request)
 	handler, err := Handle[userpb.UpdateTutorProfileRequest, userpb.TutorProfile](h.c.UpdateTutorProfile, updateTutorProfileParsePath, false)
 	if err != nil {
 		panic(err)
+	}
+	key, err := buildTutorProfileKey(r)
+	if err == nil {
+		h.cache.Delete(r.Context(), key)
 	}
 
 	handler(w, r)
@@ -99,7 +122,10 @@ func (h *UserHandler) ListTutorStudentByStudent(w http.ResponseWriter, r *http.R
 }
 
 func (h *UserHandler) GetTutorStudent(w http.ResponseWriter, r *http.Request) {
-	handler, err := Handle[userpb.GetTutorStudentRequest, userpb.TutorStudent](h.c.GetTutorStudent, getTutorStudentParsePath, false)
+	handler, err := HandleWithCache[userpb.GetTutorStudentRequest, userpb.TutorStudent](
+		h.c.GetTutorStudent, getTutorStudentParsePath, false,
+		h.cache, buildTutorStudentKey, 5*time.Minute,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -113,6 +139,11 @@ func (h *UserHandler) UpdateTutorStudent(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
+	key, err := buildTutorStudentKey(r)
+	if err == nil {
+		h.cache.Delete(r.Context(), key)
+	}
+
 	handler(w, r)
 }
 
@@ -121,6 +152,12 @@ func (h *UserHandler) DeleteTutorStudent(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		panic(err)
 	}
+
+	key, err := buildTutorStudentKey(r)
+	if err == nil {
+		h.cache.Delete(r.Context(), key)
+	}
+
 	handler(w, r)
 }
 
@@ -282,4 +319,45 @@ func deleteTutorStudentParsePath(ctx context.Context, httpReq *http.Request, grp
 		logger.Debug(ctx, "tutor, student ids added to request", zap.Any("req", grpcReq))
 	}
 	return nil
+}
+
+func buildUserKey(r *http.Request) (string, error) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		return "", fmt.Errorf("missing path param: id")
+	}
+	return fmt.Sprintf("user:%s", id), nil
+}
+
+func buildUserPublicKey(r *http.Request) (string, error) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		return "", fmt.Errorf("missing path param: id")
+	}
+	return fmt.Sprintf("user-public:%s", id), nil
+}
+
+func buildMeKey(r *http.Request) (string, error) {
+	id := r.Header.Get("X-User-Id")
+	if id == "" {
+		return "", fmt.Errorf("missing header: X-User-Id")
+	}
+	return fmt.Sprintf("user:%s", id), nil
+}
+
+func buildTutorProfileKey(r *http.Request) (string, error) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		return "", fmt.Errorf("missing path param: id")
+	}
+	return fmt.Sprintf("tutor-profile:%s", id), nil
+}
+
+func buildTutorStudentKey(r *http.Request) (string, error) {
+	tutorID := chi.URLParam(r, "tutor_id")
+	studentID := chi.URLParam(r, "student_id")
+	if tutorID == "" || studentID == "" {
+		return "", fmt.Errorf("missing tutor_id or student_id")
+	}
+	return fmt.Sprintf("tutor-student:%s:%s", tutorID, studentID), nil
 }
